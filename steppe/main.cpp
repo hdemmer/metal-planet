@@ -7,6 +7,7 @@
 #include <d3dx10.h>
 
 #include "FullScreenQuad.h"
+#include "Terrain.h"
 
 // include the Direct3D Library file
 #pragma comment (lib, "d3d11.lib")
@@ -311,6 +312,7 @@ samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
 	dev->CreateSamplerState(&samplerDesc, &sampleStatePoint);
 
 SetupRenderFullScreenQuad();
+SetupTerrain();
 }
 
 
@@ -335,7 +337,9 @@ void RenderFrame(void)
 	
 	// clear the back buffer to a deep blue
 	devcon->ClearRenderTargetView(renderTargetView, D3DXCOLOR(0.0f, 0.2f, 0.4f, 1.0f));
-
+	devcon->ClearDepthStencilView(depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+	
+	RenderTerrain();
 	
 	
 	// now render to back buffer
@@ -359,6 +363,7 @@ void RenderFrame(void)
 void CleanD3D(void)
 {
 	TearDownRenderFullScreenQuad();
+	TearDownTerrain();
 
 	swapchain->SetFullscreenState(FALSE, NULL);    // switch to windowed mode
 
