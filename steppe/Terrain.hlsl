@@ -1,3 +1,11 @@
+/////////////
+// GLOBALS //
+/////////////
+cbuffer MatrixBuffer
+{
+    matrix modelViewProjectionMatrix;
+};
+
 //////////////
 // TYPEDEFS //
 //////////////
@@ -20,9 +28,11 @@ PixelInputType TerrainVertexShader(VertexInputType input)
     
     // Calculate the position of the vertex against the world, view, and projection matrices.
 	
-    output.position.xy = 0.5 * input.position;
-    output.position.z = 0.0;
-	output.position.w=1.0;
+    output.position.xz = 0.3 * input.position;
+    output.position.y = -0.1;
+	output.position.w = 1.0;
+
+	output.position = mul(output.position, modelViewProjectionMatrix);
 
     return output;
 }

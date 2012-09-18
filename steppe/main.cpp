@@ -231,8 +231,8 @@ void InitD3D(HWND hWnd)
 	// Initialize the render target texture description.
 	ZeroMemory(&textureDesc, sizeof(textureDesc));
 
-	UINT textureWidth = 1024;
-	UINT textureHeight = 1024;
+	UINT textureWidth = SCREEN_WIDTH;
+	UINT textureHeight = SCREEN_HEIGHT;
 
 	// Setup the render target texture description.
 	textureDesc.Width = textureWidth;
@@ -338,7 +338,7 @@ void RenderFrame(void)
 	// clear the back buffer to a deep blue
 	devcon->ClearRenderTargetView(renderTargetView, D3DXCOLOR(0.0f, 0.2f, 0.4f, 1.0f));
 	devcon->ClearDepthStencilView(depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
-	
+
 	RenderTerrain();
 	
 	
