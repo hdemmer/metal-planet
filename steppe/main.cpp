@@ -30,6 +30,8 @@ ID3D11ShaderResourceView* shaderResourceView;
 ID3D11Texture2D* depthStencilBuffer;
 ID3D11DepthStencilView * depthStencilView;
 
+ID3D11SamplerState* sampleStatePoint;
+
 // function prototypes
 void InitD3D(HWND hWnd);    // sets up and initializes Direct3D
 void RenderFrame(void);     // renders a single frame
@@ -289,6 +291,24 @@ descDSV.Texture2D.MipSlice = 0;
 
 result=dev->CreateDepthStencilView(depthStencilBuffer,&descDSV,&depthStencilView);
 
+// Create a texture sampler state description.
+D3D11_SAMPLER_DESC samplerDesc;
+samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.MipLODBias = 0.0f;
+	samplerDesc.MaxAnisotropy = 1;
+	samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+	samplerDesc.BorderColor[0] = 0;
+	samplerDesc.BorderColor[1] = 0;
+	samplerDesc.BorderColor[2] = 0;
+	samplerDesc.BorderColor[3] = 0;
+	samplerDesc.MinLOD = 0;
+	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+	// Create the texture sampler state.
+	dev->CreateSamplerState(&samplerDesc, &sampleStatePoint);
 
 SetupRenderFullScreenQuad();
 }
@@ -305,7 +325,7 @@ void RenderFrame(void)
 	viewport.Width = SCREEN_WIDTH;
 	viewport.Height = SCREEN_HEIGHT;
 
-	/*
+
 	// render to texture
 
 	// Bind the render target view and depth stencil buffer to the output render pipeline.
@@ -315,7 +335,7 @@ void RenderFrame(void)
 	
 	// clear the back buffer to a deep blue
 	devcon->ClearRenderTargetView(renderTargetView, D3DXCOLOR(0.0f, 0.2f, 0.4f, 1.0f));
-	*/
+
 	
 	
 	// now render to back buffer
@@ -324,8 +344,10 @@ void RenderFrame(void)
 	devcon->OMSetRenderTargets(1, &backbuffer, NULL);
 
 	devcon->RSSetViewports(1, &viewport);
-	devcon->ClearRenderTargetView(renderTargetView, D3DXCOLOR(0.0f, 0.2f, 0.4f, 1.0f));
 
+	
+	devcon->PSSetShaderResources(0, 1, &shaderResourceView);
+	devcon->PSSetSamplers(0, 1, &sampleStatePoint);
 	RenderFullScreenQuad();
 
 	// switch the back buffer and the front buffer

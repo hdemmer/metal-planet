@@ -10,7 +10,7 @@ struct VertexInputType
 struct PixelInputType
 {
     float4 position : SV_POSITION;
-    float4 color : COLOR;
+    float2 texCoord : TEXCOORD;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -26,9 +26,7 @@ PixelInputType FullScreenQuadVertexShader(VertexInputType input)
     output.position.w = 1.0;
 
     // Store the input color for the pixel shader to use.
-    output.color.rg = input.texCoord;
-    output.color.b=0.0;
-	output.color.a=1.0;
+    output.texCoord = input.texCoord;
 
     return output;
 }
@@ -36,7 +34,11 @@ PixelInputType FullScreenQuadVertexShader(VertexInputType input)
 ////////////////////////////////////////////////////////////////////////////////
 // Pixel Shader
 ////////////////////////////////////////////////////////////////////////////////
+
+Texture2D shaderTexture;
+SamplerState SampleType;
+
 float4 FullScreenQuadPixelShader(PixelInputType input) : SV_TARGET
 {
-    return float4(input.color.x,input.color.y,0.0,1.0);
+    return shaderTexture.Sample(SampleType, input.texCoord);
 }
