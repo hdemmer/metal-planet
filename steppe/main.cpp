@@ -6,6 +6,8 @@
 #include <d3dx11.h>
 #include <d3dx10.h>
 
+#include "FullScreenQuad.h"
+
 // include the Direct3D Library file
 #pragma comment (lib, "d3d11.lib")
 #pragma comment (lib, "d3dx11.lib")
@@ -21,6 +23,13 @@ ID3D11Device *dev;                     // the pointer to our Direct3D device int
 ID3D11DeviceContext *devcon;           // the pointer to our Direct3D device context
 ID3D11RenderTargetView *backbuffer;    // the pointer to our back buffer
 
+ID3D11Texture2D* renderTargetTexture;
+ID3D11RenderTargetView* renderTargetView;
+ID3D11ShaderResourceView* shaderResourceView;
+
+ID3D11Texture2D* depthStencilBuffer;
+ID3D11DepthStencilView * depthStencilView;
+
 // function prototypes
 void InitD3D(HWND hWnd);    // sets up and initializes Direct3D
 void RenderFrame(void);     // renders a single frame
@@ -29,6 +38,56 @@ void CleanD3D(void);        // closes Direct3D and releases memory
 // the WindowProc function prototype
 LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
+#include <io.h>
+#include <stdio.h>
+#include <fcntl.h>
+
+void SetStdOutToNewConsole()
+{
+    // allocate a console for this app
+    AllocConsole();
+
+    // redirect unbuffered STDOUT to the console
+    HANDLE consoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+    int fileDescriptor = _open_osfhandle((intptr_t)consoleHandle, _O_TEXT);
+    FILE *fp = _fdopen( fileDescriptor, "w" );
+    *stdout = *fp;
+    setvbuf( stdout, NULL, _IONBF, 0 );
+
+    // give the console window a nicer title
+    SetConsoleTitle(L"Debug Output");
+
+    // give the console window a bigger buffer size
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    if ( GetConsoleScreenBufferInfo(consoleHandle, &csbi) )
+    {
+        COORD bufferSize;
+        bufferSize.X = csbi.dwSize.X;
+        bufferSize.Y = 9999;
+        SetConsoleScreenBufferSize(consoleHandle, bufferSize);
+    }
+}
+
+void OutputShaderErrorMessage(ID3D10Blob* errorMessage)
+{
+
+	char* compileErrors;
+	unsigned long bufferSize;
+
+	// Get a pointer to the error message text buffer.
+	compileErrors = (char*)(errorMessage->GetBufferPointer());
+	
+	// Get the length of the message.
+	bufferSize = errorMessage->GetBufferSize();
+
+	printf("%s", compileErrors);
+	
+	// Release the error message.
+	errorMessage->Release();
+	errorMessage = 0;
+
+	return;
+}
 
 // the entry point for any Windows program
 int WINAPI WinMain(HINSTANCE hInstance,
@@ -38,6 +97,8 @@ int WINAPI WinMain(HINSTANCE hInstance,
 {
 	HWND hWnd;
 	WNDCLASSEX wc;
+
+		SetStdOutToNewConsole();
 
 	ZeroMemory(&wc, sizeof(WNDCLASSEX));
 
@@ -156,12 +217,87 @@ void InitD3D(HWND hWnd)
 	dev->CreateRenderTargetView(pBackBuffer, NULL, &backbuffer);
 	pBackBuffer->Release();
 
-	// set the render target as the back buffer
-	devcon->OMSetRenderTargets(1, &backbuffer, NULL);
+	// render to texture
+
+	D3D11_TEXTURE2D_DESC textureDesc;
+	HRESULT result;
+	D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc;
+	D3D11_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc;
 
 
-	// Set the viewport
-	D3D11_VIEWPORT viewport;
+	// Initialize the render target texture description.
+	ZeroMemory(&textureDesc, sizeof(textureDesc));
+
+	UINT textureWidth = 1024;
+	UINT textureHeight = 1024;
+
+	// Setup the render target texture description.
+	textureDesc.Width = textureWidth;
+	textureDesc.Height = textureHeight;
+	textureDesc.MipLevels = 1;
+	textureDesc.ArraySize = 1;
+	textureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	textureDesc.SampleDesc.Count = 1;
+	textureDesc.Usage = D3D11_USAGE_DEFAULT;
+	textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+	textureDesc.CPUAccessFlags = 0;
+	textureDesc.MiscFlags = 0;
+
+	// Create the render target texture.
+	dev->CreateTexture2D(&textureDesc, NULL, &renderTargetTexture);
+
+	// Setup the description of the render target view.
+	renderTargetViewDesc.Format = textureDesc.Format;
+	renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+	renderTargetViewDesc.Texture2D.MipSlice = 0;
+
+	// Create the render target view.
+	dev->CreateRenderTargetView(renderTargetTexture, &renderTargetViewDesc, &renderTargetView);
+
+	// Setup the description of the shader resource view.
+	shaderResourceViewDesc.Format = textureDesc.Format;
+	shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
+	shaderResourceViewDesc.Texture2D.MipLevels = 1;
+
+	// Create the shader resource view.
+	dev->CreateShaderResourceView(renderTargetTexture, &shaderResourceViewDesc, &shaderResourceView);
+
+
+
+	// Create depth stencil view
+
+D3D11_TEXTURE2D_DESC descDepth;
+descDepth.Width = textureWidth;
+descDepth.Height = textureHeight;
+descDepth.MipLevels = 1;
+descDepth.ArraySize = 1;
+descDepth.Format = DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
+descDepth.SampleDesc.Count = 1;
+descDepth.SampleDesc.Quality = 0;
+descDepth.Usage = D3D11_USAGE_DEFAULT;
+descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+descDepth.CPUAccessFlags = 0;
+descDepth.MiscFlags = 0;
+result=dev->CreateTexture2D( &descDepth, NULL, &depthStencilBuffer );
+
+D3D11_DEPTH_STENCIL_VIEW_DESC descDSV;
+ZeroMemory(&descDSV, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
+descDSV.Format = DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
+descDSV.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+descDSV.Texture2D.MipSlice = 0;
+
+result=dev->CreateDepthStencilView(depthStencilBuffer,&descDSV,&depthStencilView);
+
+
+SetupRenderFullScreenQuad();
+}
+
+
+// this is the function used to render a single frame
+void RenderFrame(void)
+{
+		D3D11_VIEWPORT viewport;
 	ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
 
 	viewport.TopLeftX = 0;
@@ -169,17 +305,28 @@ void InitD3D(HWND hWnd)
 	viewport.Width = SCREEN_WIDTH;
 	viewport.Height = SCREEN_HEIGHT;
 
+	/*
+	// render to texture
+
+	// Bind the render target view and depth stencil buffer to the output render pipeline.
+	devcon->OMSetRenderTargets(1, &renderTargetView, depthStencilView);
+	
 	devcon->RSSetViewports(1, &viewport);
-}
-
-
-// this is the function used to render a single frame
-void RenderFrame(void)
-{
+	
 	// clear the back buffer to a deep blue
-	devcon->ClearRenderTargetView(backbuffer, D3DXCOLOR(0.0f, 0.2f, 0.4f, 1.0f));
+	devcon->ClearRenderTargetView(renderTargetView, D3DXCOLOR(0.0f, 0.2f, 0.4f, 1.0f));
+	*/
+	
+	
+	// now render to back buffer
 
-	// do 3D rendering on the back buffer here
+	// set the render target as the back buffer
+	devcon->OMSetRenderTargets(1, &backbuffer, NULL);
+
+	devcon->RSSetViewports(1, &viewport);
+	devcon->ClearRenderTargetView(renderTargetView, D3DXCOLOR(0.0f, 0.2f, 0.4f, 1.0f));
+
+	RenderFullScreenQuad();
 
 	// switch the back buffer and the front buffer
 	swapchain->Present(0, 0);
@@ -189,6 +336,8 @@ void RenderFrame(void)
 // this is the function that cleans up Direct3D and COM
 void CleanD3D(void)
 {
+	TearDownRenderFullScreenQuad();
+
 	swapchain->SetFullscreenState(FALSE, NULL);    // switch to windowed mode
 
 	// close and release all existing COM objects
@@ -196,4 +345,11 @@ void CleanD3D(void)
 	backbuffer->Release();
 	dev->Release();
 	devcon->Release();
+
+	renderTargetTexture->Release();
+	renderTargetView->Release();
+	shaderResourceView->Release();
+
+	depthStencilBuffer->Release();
+	depthStencilView->Release();
 }
