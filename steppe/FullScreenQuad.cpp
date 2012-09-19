@@ -7,8 +7,6 @@ ID3D11Buffer * fullScreenQuadVertexBuffer;
 ID3D11VertexShader * fullScreenQuadVertexShader;
 ID3D11InputLayout * fullScreenQuadInputLayout;
 
-ID3D11PixelShader * fullScreenQuadPixelShader;
-
 struct FullScreenQuadVertexType
 	{
 		D3DXVECTOR3 position;
@@ -90,22 +88,6 @@ void SetupRenderFullScreenQuad()
 		vertexShaderBlob->GetBufferSize(), &fullScreenQuadInputLayout);
 
 	vertexShaderBlob->Release();
-
-	// compile pixel shader
-
-	ID3D10Blob* pixelShaderBlob = NULL;
-
-	D3DX11CompileFromFile(L"FullScreenQuad.hlsl", NULL, NULL, "FullScreenQuadPixelShader", "ps_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, NULL, 
-				       &pixelShaderBlob, &errorMessage, NULL);
-
-	if (errorMessage)
-	{
-		OutputShaderErrorMessage(errorMessage);
-	}
-
-	dev->CreatePixelShader(pixelShaderBlob->GetBufferPointer(), pixelShaderBlob->GetBufferSize(), NULL, &fullScreenQuadPixelShader);
-
-	pixelShaderBlob->Release();
 }
 
 void TearDownRenderFullScreenQuad()
@@ -113,8 +95,6 @@ void TearDownRenderFullScreenQuad()
 	fullScreenQuadVertexBuffer->Release();
 	fullScreenQuadVertexShader->Release();
 	fullScreenQuadInputLayout->Release();
-
-	fullScreenQuadPixelShader->Release();
 }
 
 void RenderFullScreenQuad()
@@ -130,7 +110,6 @@ void RenderFullScreenQuad()
 	devcon->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	devcon->VSSetShader(fullScreenQuadVertexShader,NULL,0);
-	devcon->PSSetShader(fullScreenQuadPixelShader,NULL,0);
 
 	devcon->Draw(6,0);
 }

@@ -26,13 +26,24 @@ void SetupTerrain()
 	TerrainVertexType * vertices = (TerrainVertexType*)malloc(sizeof(TerrainVertexType)*vertexCount);
 
 	vertices[0].position=D3DXVECTOR3(-1,1,0);
-
+	vertices[0].normal=D3DXVECTOR3(0,0,-1);
+	vertices[0].diffuse=D3DXVECTOR3(1,1,1);
 	vertices[1].position=D3DXVECTOR3(1,1,0);
+	vertices[1].normal=D3DXVECTOR3(0,0,-1);
+	vertices[1].diffuse=D3DXVECTOR3(1,0,1);
 	vertices[2].position=D3DXVECTOR3(1,-1,0);
+	vertices[2].normal=D3DXVECTOR3(0,0,-1);
+	vertices[2].diffuse=D3DXVECTOR3(0,1,1);
 	vertices[3].position=D3DXVECTOR3(1,-1,0);
+	vertices[3].normal=D3DXVECTOR3(0,0,-1);
+	vertices[3].diffuse=D3DXVECTOR3(0,1,1);
 	vertices[4].position=D3DXVECTOR3(-1,-1,0);
+	vertices[4].normal=D3DXVECTOR3(0,0,-1);
+	vertices[4].diffuse=D3DXVECTOR3(1,1,0);
 	vertices[5].position=D3DXVECTOR3(-1,1,0);
-
+	vertices[5].normal=D3DXVECTOR3(0,0,-1);
+	vertices[5].diffuse=D3DXVECTOR3(1,1,1);
+	
 	vertexBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
 	vertexBufferDesc.ByteWidth = sizeof(TerrainVertexType) * vertexCount;
 	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
@@ -84,13 +95,8 @@ void TearDownTerrain()
 	terrainInputLayout->Release();
 }
 
-#include "Deferred.h"
-
 void RenderTerrain()
 {
-	SetDeferredRenderer();
-	
-	
 	unsigned int stride;
 	unsigned int offset;
 

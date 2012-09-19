@@ -30,15 +30,3 @@ PixelInputType FullScreenQuadVertexShader(VertexInputType input)
 
     return output;
 }
-
-////////////////////////////////////////////////////////////////////////////////
-// Pixel Shader
-////////////////////////////////////////////////////////////////////////////////
-
-Texture2D shaderTexture;
-SamplerState SampleType;
-
-float4 FullScreenQuadPixelShader(PixelInputType input) : SV_TARGET
-{
-    return shaderTexture.Sample(SampleType, input.texCoord);
-}

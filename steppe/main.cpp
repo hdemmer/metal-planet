@@ -2,9 +2,8 @@
 // include the basic windows header files and the Direct3D header files
 #include <windows.h>
 #include <windowsx.h>
-#include <d3d11.h>
-#include <d3dx11.h>
-#include <d3dx10.h>
+
+#include "Globals.h"
 
 #include "Deferred.h"
 #include "FullScreenQuad.h"
@@ -15,24 +14,11 @@
 #pragma comment (lib, "d3dx11.lib")
 #pragma comment (lib, "d3dx10.lib")
 
-// define the screen resolution
-#define SCREEN_WIDTH  800
-#define SCREEN_HEIGHT 600
-
 // global declarations
 IDXGISwapChain *swapchain;             // the pointer to the swap chain interface
 ID3D11Device *dev;                     // the pointer to our Direct3D device interface
 ID3D11DeviceContext *devcon;           // the pointer to our Direct3D device context
 ID3D11RenderTargetView *backbuffer;    // the pointer to our back buffer
-
-ID3D11Texture2D* renderTargetTexture;
-ID3D11RenderTargetView* renderTargetView;
-ID3D11ShaderResourceView* shaderResourceView;
-
-ID3D11Texture2D* depthStencilBuffer;
-ID3D11DepthStencilView * depthStencilView;
-
-ID3D11SamplerState* sampleStatePoint;
 
 // function prototypes
 void InitD3D(HWND hWnd);    // sets up and initializes Direct3D
@@ -74,7 +60,6 @@ void SetStdOutToNewConsole()
 
 void OutputShaderErrorMessage(ID3D10Blob* errorMessage)
 {
-
 	char* compileErrors;
 	unsigned long bufferSize;
 
@@ -221,97 +206,6 @@ void InitD3D(HWND hWnd)
 	dev->CreateRenderTargetView(pBackBuffer, NULL, &backbuffer);
 	pBackBuffer->Release();
 
-	// render to texture
-
-	D3D11_TEXTURE2D_DESC textureDesc;
-	HRESULT result;
-	D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc;
-	D3D11_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc;
-
-
-	// Initialize the render target texture description.
-	ZeroMemory(&textureDesc, sizeof(textureDesc));
-
-	UINT textureWidth = SCREEN_WIDTH;
-	UINT textureHeight = SCREEN_HEIGHT;
-
-	// Setup the render target texture description.
-	textureDesc.Width = textureWidth;
-	textureDesc.Height = textureHeight;
-	textureDesc.MipLevels = 1;
-	textureDesc.ArraySize = 1;
-	textureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-	textureDesc.SampleDesc.Count = 1;
-	textureDesc.Usage = D3D11_USAGE_DEFAULT;
-	textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
-	textureDesc.CPUAccessFlags = 0;
-	textureDesc.MiscFlags = 0;
-
-	// Create the render target texture.
-	dev->CreateTexture2D(&textureDesc, NULL, &renderTargetTexture);
-
-	// Setup the description of the render target view.
-	renderTargetViewDesc.Format = textureDesc.Format;
-	renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
-	renderTargetViewDesc.Texture2D.MipSlice = 0;
-
-	// Create the render target view.
-	dev->CreateRenderTargetView(renderTargetTexture, &renderTargetViewDesc, &renderTargetView);
-
-	// Setup the description of the shader resource view.
-	shaderResourceViewDesc.Format = textureDesc.Format;
-	shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-	shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
-	shaderResourceViewDesc.Texture2D.MipLevels = 1;
-
-	// Create the shader resource view.
-	dev->CreateShaderResourceView(renderTargetTexture, &shaderResourceViewDesc, &shaderResourceView);
-
-
-
-	// Create depth stencil view
-
-D3D11_TEXTURE2D_DESC descDepth;
-descDepth.Width = textureWidth;
-descDepth.Height = textureHeight;
-descDepth.MipLevels = 1;
-descDepth.ArraySize = 1;
-descDepth.Format = DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
-descDepth.SampleDesc.Count = 1;
-descDepth.SampleDesc.Quality = 0;
-descDepth.Usage = D3D11_USAGE_DEFAULT;
-descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-descDepth.CPUAccessFlags = 0;
-descDepth.MiscFlags = 0;
-result=dev->CreateTexture2D( &descDepth, NULL, &depthStencilBuffer );
-
-D3D11_DEPTH_STENCIL_VIEW_DESC descDSV;
-ZeroMemory(&descDSV, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
-descDSV.Format = DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
-descDSV.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-descDSV.Texture2D.MipSlice = 0;
-
-result=dev->CreateDepthStencilView(depthStencilBuffer,&descDSV,&depthStencilView);
-
-// Create a texture sampler state description.
-D3D11_SAMPLER_DESC samplerDesc;
-samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-	samplerDesc.MipLODBias = 0.0f;
-	samplerDesc.MaxAnisotropy = 1;
-	samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
-	samplerDesc.BorderColor[0] = 0;
-	samplerDesc.BorderColor[1] = 0;
-	samplerDesc.BorderColor[2] = 0;
-	samplerDesc.BorderColor[3] = 0;
-	samplerDesc.MinLOD = 0;
-	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
-
-	// Create the texture sampler state.
-	dev->CreateSamplerState(&samplerDesc, &sampleStatePoint);
-
 	SetupDeferred();
 SetupRenderFullScreenQuad();
 SetupTerrain();
@@ -332,17 +226,7 @@ void RenderFrame(void)
 
 	UpdateDeferred();	// TODO: call this in update not draw
 
-	// render to texture
-
-	// Bind the render target view and depth stencil buffer to the output render pipeline.
-	devcon->OMSetRenderTargets(1, &renderTargetView, depthStencilView);
-	
-	devcon->RSSetViewports(1, &viewport);
-	
-	// clear the back buffer to a deep blue
-	devcon->ClearRenderTargetView(renderTargetView, D3DXCOLOR(0.0f, 0.2f, 0.4f, 1.0f));
-	devcon->ClearDepthStencilView(depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
-
+	SetDeferredRenderer();
 	RenderTerrain();
 	
 	// now render to back buffer
@@ -351,10 +235,9 @@ void RenderFrame(void)
 	devcon->OMSetRenderTargets(1, &backbuffer, NULL);
 
 	devcon->RSSetViewports(1, &viewport);
+	devcon->ClearRenderTargetView(backbuffer, D3DXCOLOR(0.0f, 0.2f, 0.4f, 1.0f));
 
-	devcon->PSSetShaderResources(0, 1, &shaderResourceView);
-	devcon->PSSetSamplers(0, 1, &sampleStatePoint);
-	RenderFullScreenQuad();
+	RenderDeferredLighting();
 
 	// switch the back buffer and the front buffer
 	swapchain->Present(0, 0);
@@ -376,10 +259,4 @@ void CleanD3D(void)
 	dev->Release();
 	devcon->Release();
 
-	renderTargetTexture->Release();
-	renderTargetView->Release();
-	shaderResourceView->Release();
-
-	depthStencilBuffer->Release();
-	depthStencilView->Release();
 }

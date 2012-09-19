@@ -18,10 +18,11 @@ struct PixelInputType
 {
     float4 position : SV_POSITION;
 	float3 normal : NORMAL;
+	float3 diffuse : DIFFUSE;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// Vertex Shader
+// Deferred pass
 ////////////////////////////////////////////////////////////////////////////////
 
 PixelInputType DeferredVertexShader(VertexInputType input)
@@ -35,21 +36,38 @@ PixelInputType DeferredVertexShader(VertexInputType input)
 	output.position = mul(output.position, modelViewProjectionMatrix);
 
 	output.normal = input.position;
+	output.diffuse = input.diffuse;
 
     return output;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// Pixel Shader
-////////////////////////////////////////////////////////////////////////////////
-
-
 float4 DeferredPixelShader(PixelInputType input) : SV_TARGET
 {
-    return float4(input.normal.x*0.5+0.5,input.normal.y*0.5+0.5,0.5,1.0);
+    float4 diffuse;
+	diffuse.xyz=input.diffuse;
+	diffuse.w=1.0;
+    return diffuse;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// Lighting pass
+////////////////////////////////////////////////////////////////////////////////
 
+struct LightingPixelInputType
+{
+    float4 position : SV_POSITION;
+	float2 texCoord : TEXTURE;
+};
+
+
+SamplerState pointSampler;
+Texture2D diffuseTexture;
+Texture2D normalTexture;
+
+float4 DeferredLightingPixelShader(LightingPixelInputType input) : SV_TARGET
+{
+    return diffuseTexture.Sample(pointSampler, input.texCoord);
+}
 
 
 

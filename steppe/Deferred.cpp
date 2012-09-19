@@ -1,11 +1,24 @@
 
 #include "Globals.h"
 
+ID3D11Texture2D* renderTargetTexture;
+ID3D11RenderTargetView* renderTargetView;
+ID3D11ShaderResourceView* renderTargetResourceView;
+
+ID3D11Texture2D* depthStencilBuffer;
+ID3D11DepthStencilView * depthStencilView;
+
+
 ID3D11Buffer * deferredConstantsBuffer;
 ID3D11VertexShader * deferredVertexShader;
 ID3D11InputLayout * deferredInputLayout;
 
 ID3D11PixelShader * deferredPixelShader;
+
+// deferred lighting stage
+
+ID3D11PixelShader * deferredLightingPixelShader;
+ID3D11SamplerState* sampleStatePoint;
 
 struct DeferredVertexType
 {
@@ -83,6 +96,113 @@ void SetupDeferred()
 
 	// Create the constant buffer pointer so we can access the vertex shader constant buffer from within this class.
 	 dev->CreateBuffer(&matrixBufferDesc, NULL, &deferredConstantsBuffer);
+
+	 ////////////////////////////////////////
+	 //  deferred lighting
+
+	D3DX11CompileFromFile(L"Deferred.hlsl", NULL, NULL, "DeferredLightingPixelShader", "ps_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, NULL, 
+				       &pixelShaderBlob, &errorMessage, NULL);
+
+	if (errorMessage)
+	{
+		OutputShaderErrorMessage(errorMessage);
+	}
+
+	dev->CreatePixelShader(pixelShaderBlob->GetBufferPointer(), pixelShaderBlob->GetBufferSize(), NULL, &deferredLightingPixelShader);
+
+	pixelShaderBlob->Release();
+
+	
+// Create a texture sampler state description.
+D3D11_SAMPLER_DESC samplerDesc;
+samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.MipLODBias = 0.0f;
+	samplerDesc.MaxAnisotropy = 1;
+	samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+	samplerDesc.BorderColor[0] = 0;
+	samplerDesc.BorderColor[1] = 0;
+	samplerDesc.BorderColor[2] = 0;
+	samplerDesc.BorderColor[3] = 0;
+	samplerDesc.MinLOD = 0;
+	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+	// Create the texture sampler state.
+	dev->CreateSamplerState(&samplerDesc, &sampleStatePoint);
+
+		// render to texture
+
+	D3D11_TEXTURE2D_DESC textureDesc;
+	HRESULT result;
+	D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc;
+	D3D11_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc;
+
+
+	// Initialize the render target texture description.
+	ZeroMemory(&textureDesc, sizeof(textureDesc));
+
+	UINT textureWidth = SCREEN_WIDTH;
+	UINT textureHeight = SCREEN_HEIGHT;
+
+	// Setup the render target texture description.
+	textureDesc.Width = textureWidth;
+	textureDesc.Height = textureHeight;
+	textureDesc.MipLevels = 1;
+	textureDesc.ArraySize = 1;
+	textureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	textureDesc.SampleDesc.Count = 1;
+	textureDesc.Usage = D3D11_USAGE_DEFAULT;
+	textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+	textureDesc.CPUAccessFlags = 0;
+	textureDesc.MiscFlags = 0;
+
+	// Create the render target texture.
+	dev->CreateTexture2D(&textureDesc, NULL, &renderTargetTexture);
+
+	// Setup the description of the render target view.
+	renderTargetViewDesc.Format = textureDesc.Format;
+	renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+	renderTargetViewDesc.Texture2D.MipSlice = 0;
+
+	// Create the render target view.
+	dev->CreateRenderTargetView(renderTargetTexture, &renderTargetViewDesc, &renderTargetView);
+
+	// Setup the description of the shader resource view.
+	shaderResourceViewDesc.Format = textureDesc.Format;
+	shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
+	shaderResourceViewDesc.Texture2D.MipLevels = 1;
+
+	// Create the shader resource view.
+	dev->CreateShaderResourceView(renderTargetTexture, &shaderResourceViewDesc, &renderTargetResourceView);
+
+
+
+	// Create depth stencil view
+
+D3D11_TEXTURE2D_DESC descDepth;
+descDepth.Width = textureWidth;
+descDepth.Height = textureHeight;
+descDepth.MipLevels = 1;
+descDepth.ArraySize = 1;
+descDepth.Format = DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
+descDepth.SampleDesc.Count = 1;
+descDepth.SampleDesc.Quality = 0;
+descDepth.Usage = D3D11_USAGE_DEFAULT;
+descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+descDepth.CPUAccessFlags = 0;
+descDepth.MiscFlags = 0;
+result=dev->CreateTexture2D( &descDepth, NULL, &depthStencilBuffer );
+
+D3D11_DEPTH_STENCIL_VIEW_DESC descDSV;
+ZeroMemory(&descDSV, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
+descDSV.Format = DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
+descDSV.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+descDSV.Texture2D.MipSlice = 0;
+
+result=dev->CreateDepthStencilView(depthStencilBuffer,&descDSV,&depthStencilView);
 }
 
 
@@ -93,6 +213,18 @@ void TearDownDeferred()
 	deferredInputLayout->Release();
 
 	deferredPixelShader->Release();
+
+	// lighting stage
+
+	sampleStatePoint->Release();
+	deferredLightingPixelShader->Release();
+
+	renderTargetTexture->Release();
+	renderTargetView->Release();
+	renderTargetResourceView->Release();
+
+	depthStencilBuffer->Release();
+	depthStencilView->Release();
 }
 
 #include <stdio.h>
@@ -122,7 +254,7 @@ void UpdateDeferred()
 
 	// Setup the projection matrix.
 	float fieldOfView = (float)D3DX_PI / 4.0f;
-	float screenAspect = (float)800 / (float)600;
+	float screenAspect = (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT;
 
 	// Create the projection matrix for 3D rendering.
 	D3DXMatrixPerspectiveFovLH(&projectionMatrix, fieldOfView, screenAspect, 0.1, 1000.0);
@@ -155,6 +287,24 @@ void UpdateDeferred()
 
 void SetDeferredRenderer()
 {
+	D3D11_VIEWPORT viewport;
+	ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
+
+	viewport.TopLeftX = 0;
+	viewport.TopLeftY = 0;
+	viewport.Width = SCREEN_WIDTH;
+	viewport.Height = SCREEN_HEIGHT;
+
+
+	// Bind the render target view and depth stencil buffer to the output render pipeline.
+	devcon->OMSetRenderTargets(1, &renderTargetView, depthStencilView);
+	
+	devcon->RSSetViewports(1, &viewport);
+	
+	// clear the back buffer to a deep blue
+	devcon->ClearRenderTargetView(renderTargetView, D3DXCOLOR(0.0f, 0.2f, 0.4f, 1.0f));
+	devcon->ClearDepthStencilView(depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+
 	/// setup shaders
 	devcon->IASetInputLayout(deferredInputLayout);
 
@@ -162,4 +312,16 @@ void SetDeferredRenderer()
 	devcon->PSSetShader(deferredPixelShader,NULL,0);
 
 	devcon->VSSetConstantBuffers(0, 1, &deferredConstantsBuffer);
+}
+
+#include "FullScreenQuad.h"
+
+void RenderDeferredLighting()
+{
+	devcon->PSSetShader(deferredLightingPixelShader,NULL,0);
+
+	devcon->PSSetShaderResources(0, 1, &renderTargetResourceView);
+	devcon->PSSetSamplers(0, 1, &sampleStatePoint);
+	RenderFullScreenQuad();
+
 }
