@@ -24,6 +24,9 @@
     <ClCompile Include="Terrain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Deferred.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FullScreenQuad.h">
@@ -32,12 +35,21 @@
     <ClInclude Include="Terrain.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="Globals.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Deferred.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="FullScreenQuad.hlsl">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="Terrain.hlsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Deferred.hlsl">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

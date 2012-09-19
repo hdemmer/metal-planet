@@ -6,6 +6,7 @@
 #include <d3dx11.h>
 #include <d3dx10.h>
 
+#include "Deferred.h"
 #include "FullScreenQuad.h"
 #include "Terrain.h"
 
@@ -311,6 +312,7 @@ samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
 	// Create the texture sampler state.
 	dev->CreateSamplerState(&samplerDesc, &sampleStatePoint);
 
+	SetupDeferred();
 SetupRenderFullScreenQuad();
 SetupTerrain();
 }
@@ -328,6 +330,8 @@ void RenderFrame(void)
 	viewport.Height = SCREEN_HEIGHT;
 
 
+	UpdateDeferred();	// TODO: call this in update not draw
+
 	// render to texture
 
 	// Bind the render target view and depth stencil buffer to the output render pipeline.
@@ -341,7 +345,6 @@ void RenderFrame(void)
 
 	RenderTerrain();
 	
-	
 	// now render to back buffer
 
 	// set the render target as the back buffer
@@ -349,7 +352,6 @@ void RenderFrame(void)
 
 	devcon->RSSetViewports(1, &viewport);
 
-	
 	devcon->PSSetShaderResources(0, 1, &shaderResourceView);
 	devcon->PSSetSamplers(0, 1, &sampleStatePoint);
 	RenderFullScreenQuad();
@@ -362,6 +364,7 @@ void RenderFrame(void)
 // this is the function that cleans up Direct3D and COM
 void CleanD3D(void)
 {
+	TearDownDeferred();
 	TearDownRenderFullScreenQuad();
 	TearDownTerrain();
 
