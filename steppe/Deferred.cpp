@@ -1,9 +1,11 @@
 
 #include "Globals.h"
 
-ID3D11Texture2D* renderTargetTexture;
-ID3D11RenderTargetView* renderTargetView;
-ID3D11ShaderResourceView* renderTargetResourceView;
+#define NUM_MRTS 4
+
+ID3D11Texture2D* renderTargetTexture[NUM_MRTS];
+ID3D11RenderTargetView* renderTargetView[NUM_MRTS];
+ID3D11ShaderResourceView* renderTargetResourceView[NUM_MRTS];
 
 ID3D11Texture2D* depthStencilBuffer;
 ID3D11DepthStencilView * depthStencilView;
@@ -40,7 +42,7 @@ void SetupDeferred()
 	ID3D10Blob* vertexShaderBlob = NULL;
 
 	D3DX11CompileFromFile(L"Deferred.hlsl", NULL, NULL, "DeferredVertexShader", "vs_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, NULL, 
-				       &vertexShaderBlob, &errorMessage, NULL);
+		&vertexShaderBlob, &errorMessage, NULL);
 
 	if (errorMessage)
 	{
@@ -50,14 +52,14 @@ void SetupDeferred()
 	dev->CreateVertexShader(vertexShaderBlob->GetBufferPointer(), vertexShaderBlob->GetBufferSize(), NULL, &deferredVertexShader);
 
 	D3D11_INPUT_ELEMENT_DESC inputLayout[] =
-{
-    { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, 
-          D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		  { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, 
-          D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		  { "DIFFUSE", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 24, 
-          D3D11_INPUT_PER_VERTEX_DATA, 0 }
-};
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, 
+		D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, 
+		D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "DIFFUSE", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 24, 
+		D3D11_INPUT_PER_VERTEX_DATA, 0 }
+	};
 
 	UINT numElements = sizeof(inputLayout) / sizeof(inputLayout[0]);
 
@@ -72,7 +74,7 @@ void SetupDeferred()
 	ID3D10Blob* pixelShaderBlob = NULL;
 
 	D3DX11CompileFromFile(L"Deferred.hlsl", NULL, NULL, "DeferredPixelShader", "ps_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, NULL, 
-				       &pixelShaderBlob, &errorMessage, NULL);
+		&pixelShaderBlob, &errorMessage, NULL);
 
 	if (errorMessage)
 	{
@@ -95,13 +97,13 @@ void SetupDeferred()
 	matrixBufferDesc.StructureByteStride = 0;
 
 	// Create the constant buffer pointer so we can access the vertex shader constant buffer from within this class.
-	 dev->CreateBuffer(&matrixBufferDesc, NULL, &deferredConstantsBuffer);
+	dev->CreateBuffer(&matrixBufferDesc, NULL, &deferredConstantsBuffer);
 
-	 ////////////////////////////////////////
-	 //  deferred lighting
+	////////////////////////////////////////
+	//  deferred lighting
 
 	D3DX11CompileFromFile(L"Deferred.hlsl", NULL, NULL, "DeferredLightingPixelShader", "ps_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, NULL, 
-				       &pixelShaderBlob, &errorMessage, NULL);
+		&pixelShaderBlob, &errorMessage, NULL);
 
 	if (errorMessage)
 	{
@@ -112,10 +114,10 @@ void SetupDeferred()
 
 	pixelShaderBlob->Release();
 
-	
-// Create a texture sampler state description.
-D3D11_SAMPLER_DESC samplerDesc;
-samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+
+	// Create a texture sampler state description.
+	D3D11_SAMPLER_DESC samplerDesc;
+	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
 	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
 	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
 	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -132,7 +134,7 @@ samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
 	// Create the texture sampler state.
 	dev->CreateSamplerState(&samplerDesc, &sampleStatePoint);
 
-		// render to texture
+	// render to texture
 
 	D3D11_TEXTURE2D_DESC textureDesc;
 	HRESULT result;
@@ -158,16 +160,10 @@ samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
 	textureDesc.CPUAccessFlags = 0;
 	textureDesc.MiscFlags = 0;
 
-	// Create the render target texture.
-	dev->CreateTexture2D(&textureDesc, NULL, &renderTargetTexture);
-
 	// Setup the description of the render target view.
 	renderTargetViewDesc.Format = textureDesc.Format;
 	renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
 	renderTargetViewDesc.Texture2D.MipSlice = 0;
-
-	// Create the render target view.
-	dev->CreateRenderTargetView(renderTargetTexture, &renderTargetViewDesc, &renderTargetView);
 
 	// Setup the description of the shader resource view.
 	shaderResourceViewDesc.Format = textureDesc.Format;
@@ -175,34 +171,44 @@ samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
 	shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
 	shaderResourceViewDesc.Texture2D.MipLevels = 1;
 
-	// Create the shader resource view.
-	dev->CreateShaderResourceView(renderTargetTexture, &shaderResourceViewDesc, &renderTargetResourceView);
+	for (int i=0; i< NUM_MRTS; i++)
+	{
 
+		// Create the render target texture.
+		dev->CreateTexture2D(&textureDesc, NULL, &renderTargetTexture[i]);
+
+		// Create the render target view.
+		dev->CreateRenderTargetView(renderTargetTexture[i], &renderTargetViewDesc, &renderTargetView[i]);
+
+
+		// Create the shader resource view.
+		dev->CreateShaderResourceView(renderTargetTexture[i], &shaderResourceViewDesc, &renderTargetResourceView[i]);
+	}
 
 
 	// Create depth stencil view
 
-D3D11_TEXTURE2D_DESC descDepth;
-descDepth.Width = textureWidth;
-descDepth.Height = textureHeight;
-descDepth.MipLevels = 1;
-descDepth.ArraySize = 1;
-descDepth.Format = DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
-descDepth.SampleDesc.Count = 1;
-descDepth.SampleDesc.Quality = 0;
-descDepth.Usage = D3D11_USAGE_DEFAULT;
-descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-descDepth.CPUAccessFlags = 0;
-descDepth.MiscFlags = 0;
-result=dev->CreateTexture2D( &descDepth, NULL, &depthStencilBuffer );
+	D3D11_TEXTURE2D_DESC descDepth;
+	descDepth.Width = textureWidth;
+	descDepth.Height = textureHeight;
+	descDepth.MipLevels = 1;
+	descDepth.ArraySize = 1;
+	descDepth.Format = DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
+	descDepth.SampleDesc.Count = 1;
+	descDepth.SampleDesc.Quality = 0;
+	descDepth.Usage = D3D11_USAGE_DEFAULT;
+	descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+	descDepth.CPUAccessFlags = 0;
+	descDepth.MiscFlags = 0;
+	result=dev->CreateTexture2D( &descDepth, NULL, &depthStencilBuffer );
 
-D3D11_DEPTH_STENCIL_VIEW_DESC descDSV;
-ZeroMemory(&descDSV, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
-descDSV.Format = DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
-descDSV.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-descDSV.Texture2D.MipSlice = 0;
+	D3D11_DEPTH_STENCIL_VIEW_DESC descDSV;
+	ZeroMemory(&descDSV, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
+	descDSV.Format = DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
+	descDSV.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+	descDSV.Texture2D.MipSlice = 0;
 
-result=dev->CreateDepthStencilView(depthStencilBuffer,&descDSV,&depthStencilView);
+	result=dev->CreateDepthStencilView(depthStencilBuffer,&descDSV,&depthStencilView);
 }
 
 
@@ -219,9 +225,12 @@ void TearDownDeferred()
 	sampleStatePoint->Release();
 	deferredLightingPixelShader->Release();
 
-	renderTargetTexture->Release();
-	renderTargetView->Release();
-	renderTargetResourceView->Release();
+	for (int i=0; i<NUM_MRTS; i++)
+	{
+	renderTargetTexture[i]->Release();
+	renderTargetView[i]->Release();
+	renderTargetResourceView[i]->Release();
+	}
 
 	depthStencilBuffer->Release();
 	depthStencilView->Release();
@@ -233,15 +242,15 @@ void PrintD3DMatrix(const char* name, D3DXMATRIX &mat)
 {
 	char buf[300];
 	sprintf(buf, "Printing D3D Matrix: - %s\n"
-//	"\t 1 \t 2 \t 3 \t 4\n"
-	"\t %f \t %f \t %f \t %f\n"
-	"\t %f \t %f \t %f \t %f\n"
-	"\t %f \t %f \t %f \t %f\n"
-	"\t %f \t %f \t %f \t %f\n", name,
-	mat._11, mat._12, mat._13, mat._14,
-	mat._21, mat._22, mat._23, mat._24,
-	mat._31, mat._32, mat._33, mat._34,
-	mat._41, mat._42, mat._43, mat._44);
+		//	"\t 1 \t 2 \t 3 \t 4\n"
+		"\t %f \t %f \t %f \t %f\n"
+		"\t %f \t %f \t %f \t %f\n"
+		"\t %f \t %f \t %f \t %f\n"
+		"\t %f \t %f \t %f \t %f\n", name,
+		mat._11, mat._12, mat._13, mat._14,
+		mat._21, mat._22, mat._23, mat._24,
+		mat._31, mat._32, mat._33, mat._34,
+		mat._41, mat._42, mat._43, mat._44);
 
 	printf(buf);
 }
@@ -297,12 +306,14 @@ void SetDeferredRenderer()
 
 
 	// Bind the render target view and depth stencil buffer to the output render pipeline.
-	devcon->OMSetRenderTargets(1, &renderTargetView, depthStencilView);
-	
+	devcon->OMSetRenderTargets(NUM_MRTS, renderTargetView, depthStencilView);
+
 	devcon->RSSetViewports(1, &viewport);
-	
-	// clear the back buffer to a deep blue
-	devcon->ClearRenderTargetView(renderTargetView, D3DXCOLOR(0.0f, 0.2f, 0.4f, 1.0f));
+
+	for (int i=0; i<NUM_MRTS; i++)
+	{
+		devcon->ClearRenderTargetView(renderTargetView[i], D3DXCOLOR(0.0f, 0.0f, 0.0f, 1.0f));
+	}
 	devcon->ClearDepthStencilView(depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
 	/// setup shaders
@@ -318,10 +329,13 @@ void SetDeferredRenderer()
 
 void RenderDeferredLighting()
 {
+	ID3D11SamplerState * samplerStates[4] = {sampleStatePoint};
+	
 	devcon->PSSetShader(deferredLightingPixelShader,NULL,0);
 
-	devcon->PSSetShaderResources(0, 1, &renderTargetResourceView);
-	devcon->PSSetSamplers(0, 1, &sampleStatePoint);
+	devcon->PSSetShaderResources(0, NUM_MRTS, renderTargetResourceView);
+	
+	devcon->PSSetSamplers(0, NUM_MRTS, samplerStates);
 	RenderFullScreenQuad();
 
 }
