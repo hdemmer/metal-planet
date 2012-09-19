@@ -1,10 +1,3 @@
-/////////////
-// GLOBALS //
-/////////////
-cbuffer MatrixBuffer
-{
-    matrix modelViewProjectionMatrix;
-};
 
 //////////////
 // TYPEDEFS //
@@ -30,11 +23,13 @@ DeferredVertexInputType TerrainVertexShader(VertexInputType input)
     
     // Calculate the position of the vertex against the world, view, and projection matrices.
 	
-    output.position.xz = 0.3 * input.position;
-    output.position.y = -0.1;
+	float h = sin(input.position.x) + cos(input.position.y);
+
+    output.position.xz = input.position + float2(-5.0,-5.0);
+    output.position.y = 0.0;
 
 	output.normal = float3(0,1,0);
-	output.diffuse=output.position;
+	output.diffuse=output.position*0.1;
 
     return output;
 }

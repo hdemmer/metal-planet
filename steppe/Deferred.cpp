@@ -333,4 +333,7 @@ void RenderDeferredLighting()
 	devcon->PSSetSamplers(0, NUM_MRTS, samplerStates);
 	RenderFullScreenQuad();
 
+	ID3D11ShaderResourceView * empty[] = {NULL,NULL,NULL,NULL};
+
+	devcon->PSSetShaderResources(0, NUM_MRTS, empty);
 }

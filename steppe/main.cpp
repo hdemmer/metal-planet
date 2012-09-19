@@ -187,7 +187,7 @@ void InitD3D(HWND hWnd)
 	D3D11CreateDeviceAndSwapChain(NULL,
 		D3D_DRIVER_TYPE_HARDWARE,
 		NULL,
-		NULL,
+		D3D11_CREATE_DEVICE_DEBUG,
 		NULL,
 		NULL,
 		D3D11_SDK_VERSION,
@@ -209,6 +209,7 @@ void InitD3D(HWND hWnd)
 	SetupDeferred();
 SetupRenderFullScreenQuad();
 SetupTerrain();
+PrepareTerrain();
 }
 
 
@@ -222,8 +223,6 @@ void RenderFrame(void)
 	viewport.TopLeftY = 0;
 	viewport.Width = SCREEN_WIDTH;
 	viewport.Height = SCREEN_HEIGHT;
-
-	PrepareTerrain();
 
 	UpdateDeferred();	// TODO: call this in update not draw
 

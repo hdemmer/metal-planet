@@ -17,9 +17,7 @@ struct TerrainVertexType
 		D3DXVECTOR2 position;
 };
 
-#define NUM_VERTICES 3000
-
-#define MAX_STREAM_OUT 10000
+#define GRID_SIZE 10
 
 void PrepareTerrain()
 {
@@ -38,43 +36,36 @@ void PrepareTerrain()
 
 	devcon->SOSetTargets(1,&terrainStreamOutBuffer,&offset);
 
-	devcon->Draw(NUM_VERTICES,0);
+	devcon->Draw(GRID_SIZE*GRID_SIZE,0);
 
 	ID3D11Buffer * pBuf = NULL;
 	devcon->SOSetTargets(1,&pBuf,&offset);
 }
+
+#include <stdio.h>
 
 void SetupTerrain()
 {
 	D3D11_BUFFER_DESC vertexBufferDesc;
 	D3D11_SUBRESOURCE_DATA vertexData;
 
-	int vertexCount = NUM_VERTICES;
-	DeferredVertexType * vertices = (DeferredVertexType*)malloc(sizeof(DeferredVertexType)*vertexCount);
+	int vertexCount = GRID_SIZE*GRID_SIZE*6;
+	TerrainVertexType * vertices = (TerrainVertexType*)malloc(sizeof(TerrainVertexType)*vertexCount);
 
-	/*
-	vertices[0].position=D3DXVECTOR2(-1,1);
-	vertices[1].position=D3DXVECTOR2(1,1);
-	vertices[2].position=D3DXVECTOR2(1,-1);
-	vertices[3].position=D3DXVECTOR2(1,-1);
-	vertices[4].position=D3DXVECTOR2(-1,-1);
-	vertices[5].position=D3DXVECTOR2(-1,1);
-	*/
-
-	for (int i=0;i<NUM_VERTICES;i++)
+	for (int i=0;i<GRID_SIZE;i++)
 	{
-		float x = rand() / (float)RAND_MAX;
-		float y = rand() / (float)RAND_MAX;
-		float z = rand() / (float)RAND_MAX;
-		x -=0.5;
-		y -=0.5;
-		z -=0.5;
-		x*=10;
-		y*=10;
-		z*=10;
-		vertices[i].position=D3DXVECTOR3(x,y,z);
-		vertices[i].diffuse=D3DXVECTOR3(0.5,0.5,1.0);
+	for (int j=0;j<GRID_SIZE;j++)
+	{
+		int baseIndex = 6*(i+j*GRID_SIZE);
+		vertices[baseIndex+0].position=D3DXVECTOR2(i,j);
+		vertices[baseIndex+1].position=D3DXVECTOR2(i,j+1);
+		vertices[baseIndex+2].position=D3DXVECTOR2(i+1,j);
+		vertices[baseIndex+3].position=D3DXVECTOR2(i+1,j);
+		vertices[baseIndex+4].position=D3DXVECTOR2(i,j+1);
+		vertices[baseIndex+5].position=D3DXVECTOR2(i+1,j+1);
 	}
+	}
+	
 
 	vertexBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
 	vertexBufferDesc.ByteWidth = sizeof(TerrainVertexType) * vertexCount;
@@ -94,7 +85,7 @@ void SetupTerrain()
 	D3D11_BUFFER_DESC streamOutBufferDesc;
 
 	streamOutBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	streamOutBufferDesc.ByteWidth = sizeof(DeferredVertexType) * NUM_VERTICES;
+	streamOutBufferDesc.ByteWidth = sizeof(DeferredVertexType) * GRID_SIZE*GRID_SIZE*6;
 	streamOutBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER | D3D11_BIND_STREAM_OUTPUT;
 	streamOutBufferDesc.CPUAccessFlags = 0;
 	streamOutBufferDesc.MiscFlags = 0;
@@ -141,10 +132,10 @@ void SetupTerrain()
 	, { 0, "DIFFUSE", 0, 0, 3, 0 }
 };
 
-UINT stride = 9 * sizeof(float); // *NOT* sizeof the above array!
-UINT elems = sizeof(soDecl) / sizeof(D3D11_SO_DECLARATION_ENTRY);
+	UINT stride[1] = {9 * sizeof(float)}; // *NOT* sizeof the above array!
+	UINT elems = sizeof(soDecl) / sizeof(D3D11_SO_DECLARATION_ENTRY);
 
-	HRESULT res = dev->CreateGeometryShaderWithStreamOutput(gsBlob->GetBufferPointer(), gsBlob->GetBufferSize(),soDecl,elems,&stride,1,D3D11_SO_NO_RASTERIZED_STREAM,NULL, &terrainDummyGS);
+	HRESULT res = dev->CreateGeometryShaderWithStreamOutput(gsBlob->GetBufferPointer(), gsBlob->GetBufferSize(),soDecl,elems,stride,1,D3D11_SO_NO_RASTERIZED_STREAM,NULL, &terrainDummyGS);
 }
 
 
