@@ -95,6 +95,24 @@ void TearDownDeferred()
 	deferredPixelShader->Release();
 }
 
+#include <stdio.h>
+
+void PrintD3DMatrix(const char* name, D3DXMATRIX &mat)
+{
+	char buf[300];
+	sprintf(buf, "Printing D3D Matrix: - %s\n"
+//	"\t 1 \t 2 \t 3 \t 4\n"
+	"\t %f \t %f \t %f \t %f\n"
+	"\t %f \t %f \t %f \t %f\n"
+	"\t %f \t %f \t %f \t %f\n"
+	"\t %f \t %f \t %f \t %f\n", name,
+	mat._11, mat._12, mat._13, mat._14,
+	mat._21, mat._22, mat._23, mat._24,
+	mat._31, mat._32, mat._33, mat._34,
+	mat._41, mat._42, mat._43, mat._44);
+
+	printf(buf);
+}
 
 void UpdateDeferred()
 {
@@ -109,9 +127,13 @@ void UpdateDeferred()
 	// Create the projection matrix for 3D rendering.
 	D3DXMatrixPerspectiveFovLH(&projectionMatrix, fieldOfView, screenAspect, 0.1, 1000.0);
 
+	D3DXMATRIX transposed;
+
 	D3DXMatrixLookAtLH(&lookAtMatrix, &D3DXVECTOR3(0,10,-10), &D3DXVECTOR3(0,0,0), &D3DXVECTOR3(0,1,0));
 
 	D3DXMatrixMultiply(&modelViewProjectionMatrix, &lookAtMatrix, &projectionMatrix);
+
+	D3DXMatrixTranspose(&transposed,&modelViewProjectionMatrix);
 
 	// setup parameters
 
@@ -125,7 +147,7 @@ void UpdateDeferred()
 	dataPtr = (MatrixBufferType*)mappedResource.pData;
 
 	// Copy the matrices into the constant buffer.
-	dataPtr->modelViewProjection = modelViewProjectionMatrix;
+	dataPtr->modelViewProjection = transposed;
 
 	// Unlock the constant buffer.
 	devcon->Unmap(deferredConstantsBuffer, 0);

@@ -17,6 +17,7 @@ struct VertexInputType
 struct PixelInputType
 {
     float4 position : SV_POSITION;
+	float3 normal : NORMAL;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -31,8 +32,9 @@ PixelInputType DeferredVertexShader(VertexInputType input)
 	
     output.position.xyz = input.position;
 	output.position.w = 1.0;
-
 	output.position = mul(output.position, modelViewProjectionMatrix);
+
+	output.normal = input.position;
 
     return output;
 }
@@ -41,12 +43,10 @@ PixelInputType DeferredVertexShader(VertexInputType input)
 // Pixel Shader
 ////////////////////////////////////////////////////////////////////////////////
 
-Texture2D shaderTexture;
-SamplerState SampleType;
 
 float4 DeferredPixelShader(PixelInputType input) : SV_TARGET
 {
-    return float4(1.0,1.0,1.0,1.0);
+    return float4(input.normal.x*0.5+0.5,input.normal.y*0.5+0.5,0.5,1.0);
 }
 
 

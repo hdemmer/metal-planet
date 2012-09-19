@@ -26,6 +26,7 @@ void SetupTerrain()
 	TerrainVertexType * vertices = (TerrainVertexType*)malloc(sizeof(TerrainVertexType)*vertexCount);
 
 	vertices[0].position=D3DXVECTOR3(-1,1,0);
+
 	vertices[1].position=D3DXVECTOR3(1,1,0);
 	vertices[2].position=D3DXVECTOR3(1,-1,0);
 	vertices[3].position=D3DXVECTOR3(1,-1,0);
