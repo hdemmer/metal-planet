@@ -24,11 +24,11 @@ void PrepareTerrain()
 	unsigned int stride;
 	unsigned int offset;
 
-	stride = sizeof(DeferredVertexType); 
+	stride = sizeof(TerrainVertexType); 
 	offset = 0;
 
 	devcon->IASetInputLayout(terrainInputLayout);
-	devcon->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	devcon->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
 	devcon->IASetVertexBuffers(0,1,&terrainVertexBuffer,&stride,&offset);
 
 	devcon->VSSetShader(terrainVertexShader, NULL,0);
@@ -36,7 +36,7 @@ void PrepareTerrain()
 
 	devcon->SOSetTargets(1,&terrainStreamOutBuffer,&offset);
 
-	devcon->Draw(GRID_SIZE*GRID_SIZE,0);
+	devcon->Draw(GRID_SIZE*GRID_SIZE*6,0);
 
 	ID3D11Buffer * pBuf = NULL;
 	devcon->SOSetTargets(1,&pBuf,&offset);
@@ -49,7 +49,7 @@ void SetupTerrain()
 	D3D11_BUFFER_DESC vertexBufferDesc;
 	D3D11_SUBRESOURCE_DATA vertexData;
 
-	int vertexCount = GRID_SIZE*GRID_SIZE*6;
+	UINT vertexCount = GRID_SIZE*GRID_SIZE*6;
 	TerrainVertexType * vertices = (TerrainVertexType*)malloc(sizeof(TerrainVertexType)*vertexCount);
 
 	for (int i=0;i<GRID_SIZE;i++)
@@ -58,11 +58,13 @@ void SetupTerrain()
 	{
 		int baseIndex = 6*(i+j*GRID_SIZE);
 		vertices[baseIndex+0].position=D3DXVECTOR2(i,j);
-		vertices[baseIndex+1].position=D3DXVECTOR2(i,j+1);
-		vertices[baseIndex+2].position=D3DXVECTOR2(i+1,j);
-		vertices[baseIndex+3].position=D3DXVECTOR2(i+1,j);
-		vertices[baseIndex+4].position=D3DXVECTOR2(i,j+1);
-		vertices[baseIndex+5].position=D3DXVECTOR2(i+1,j+1);
+		vertices[baseIndex+1].position=D3DXVECTOR2(i+1,j);
+		vertices[baseIndex+2].position=D3DXVECTOR2(i,j+1);
+		
+		vertices[baseIndex+3].position=D3DXVECTOR2(i,j+1);
+		vertices[baseIndex+4].position=D3DXVECTOR2(i+1,j+1);
+		vertices[baseIndex+5].position=D3DXVECTOR2(i+1,j);
+
 	}
 	}
 	
@@ -85,7 +87,7 @@ void SetupTerrain()
 	D3D11_BUFFER_DESC streamOutBufferDesc;
 
 	streamOutBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	streamOutBufferDesc.ByteWidth = sizeof(DeferredVertexType) * GRID_SIZE*GRID_SIZE*6;
+	streamOutBufferDesc.ByteWidth = sizeof(DeferredVertexType) *vertexCount;
 	streamOutBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER | D3D11_BIND_STREAM_OUTPUT;
 	streamOutBufferDesc.CPUAccessFlags = 0;
 	streamOutBufferDesc.MiscFlags = 0;
@@ -118,12 +120,6 @@ void SetupTerrain()
 	dev->CreateInputLayout(inputLayout, numElements, vertexShaderBlob->GetBufferPointer(), 
 		vertexShaderBlob->GetBufferSize(), &terrainInputLayout);
 
-	vertexShaderBlob->Release();
-
-	ID3D10Blob* gsBlob = NULL;
-
-	D3DX11CompileFromFile(L"Terrain.hlsl", NULL, NULL, "DummyGeometryShader", "gs_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, NULL, 
-				       &gsBlob, &errorMessage, NULL);
 	
 	D3D11_SO_DECLARATION_ENTRY soDecl[] = 
 {
@@ -135,7 +131,9 @@ void SetupTerrain()
 	UINT stride[1] = {9 * sizeof(float)}; // *NOT* sizeof the above array!
 	UINT elems = sizeof(soDecl) / sizeof(D3D11_SO_DECLARATION_ENTRY);
 
-	HRESULT res = dev->CreateGeometryShaderWithStreamOutput(gsBlob->GetBufferPointer(), gsBlob->GetBufferSize(),soDecl,elems,stride,1,D3D11_SO_NO_RASTERIZED_STREAM,NULL, &terrainDummyGS);
+	HRESULT res = dev->CreateGeometryShaderWithStreamOutput(vertexShaderBlob->GetBufferPointer(), vertexShaderBlob->GetBufferSize(),soDecl,elems,stride,1,D3D11_SO_NO_RASTERIZED_STREAM,NULL, &terrainDummyGS);
+
+	vertexShaderBlob->Release();
 }
 
 
