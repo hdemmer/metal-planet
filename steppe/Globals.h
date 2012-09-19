@@ -13,3 +13,10 @@ extern void OutputShaderErrorMessage(ID3D10Blob* errorMessage);
 // define the screen resolution
 #define SCREEN_WIDTH  800
 #define SCREEN_HEIGHT 600
+
+struct DeferredVertexType
+{
+	D3DXVECTOR3 position;
+	D3DXVECTOR3 normal;
+	D3DXVECTOR3 diffuse;
+};

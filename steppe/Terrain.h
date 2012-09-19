@@ -1,4 +1,5 @@
 
+void PrepareTerrain();
 
 void SetupTerrain();
 

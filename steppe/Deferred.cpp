@@ -22,12 +22,6 @@ ID3D11PixelShader * deferredPixelShader;
 ID3D11PixelShader * deferredLightingPixelShader;
 ID3D11SamplerState* sampleStatePoint;
 
-struct DeferredVertexType
-{
-	D3DXVECTOR3 position;
-	D3DXVECTOR3 normal;
-	D3DXVECTOR3 diffuse;
-};
 
 struct MatrixBufferType
 {
@@ -320,6 +314,7 @@ void SetDeferredRenderer()
 	devcon->IASetInputLayout(deferredInputLayout);
 
 	devcon->VSSetShader(deferredVertexShader,NULL,0);
+	devcon->GSSetShader(NULL, NULL, 0);
 	devcon->PSSetShader(deferredPixelShader,NULL,0);
 
 	devcon->VSSetConstantBuffers(0, 1, &deferredConstantsBuffer);

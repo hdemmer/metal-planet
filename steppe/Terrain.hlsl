@@ -14,37 +14,40 @@ struct VertexInputType
     float2 position : POSITION;
 };
 
-struct PixelInputType
+struct DeferredVertexInputType
 {
-    float4 position : SV_POSITION;
+    float3 position : POSITION;
+	float3 normal : NORMAL;
+	float3 diffuse : DIFFUSE;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 // Vertex Shader
 ////////////////////////////////////////////////////////////////////////////////
-PixelInputType TerrainVertexShader(VertexInputType input)
+DeferredVertexInputType TerrainVertexShader(VertexInputType input)
 {
-    PixelInputType output;
+    DeferredVertexInputType output;
     
     // Calculate the position of the vertex against the world, view, and projection matrices.
 	
     output.position.xz = 0.3 * input.position;
     output.position.y = -0.1;
-	output.position.w = 1.0;
 
-	output.position = mul(output.position, modelViewProjectionMatrix);
+	output.normal = float3(0,1,0);
+	output.diffuse=output.position;
 
     return output;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Pixel Shader
+// Geometry Shader
 ////////////////////////////////////////////////////////////////////////////////
 
-Texture2D shaderTexture;
-SamplerState SampleType;
-
-float4 TerrainPixelShader(PixelInputType input) : SV_TARGET
+[maxvertexcount(3)]
+void DummyGeometryShader( triangle DeferredVertexInputType input[3], inout TriangleStream<DeferredVertexInputType> TriangleOutputStream )
 {
-    return float4(1.0,1.0,1.0,1.0);
+    TriangleOutputStream.Append( input[0] );
+    TriangleOutputStream.Append( input[1] );
+    TriangleOutputStream.Append( input[2] );
+    TriangleOutputStream.RestartStrip();
 }

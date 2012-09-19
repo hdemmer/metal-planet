@@ -223,6 +223,7 @@ void RenderFrame(void)
 	viewport.Width = SCREEN_WIDTH;
 	viewport.Height = SCREEN_HEIGHT;
 
+	PrepareTerrain();
 
 	UpdateDeferred();	// TODO: call this in update not draw
 
