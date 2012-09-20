@@ -264,7 +264,7 @@ void UpdateDeferred()
 
 	D3DXMATRIX transposed;
 
-	D3DXMatrixLookAtLH(&lookAtMatrix, &D3DXVECTOR3(0,2,-10), &D3DXVECTOR3(0,0,0), &D3DXVECTOR3(0,1,0));
+	D3DXMatrixLookAtLH(&lookAtMatrix, &D3DXVECTOR3(0,10,-10), &D3DXVECTOR3(0,0,0), &D3DXVECTOR3(0,1,0));
 
 	D3DXMatrixMultiply(&modelViewProjectionMatrix, &lookAtMatrix, &projectionMatrix);
 

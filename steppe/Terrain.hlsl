@@ -3,6 +3,7 @@
 cbuffer terrainConstantsBuffer
 {
     float2 origin;
+	float1 scale : SCALE;
 };
 
 //////////////
@@ -29,7 +30,7 @@ DeferredVertexInputType TerrainVertexShader(VertexInputType input)
     
     // Calculate the position of the vertex against the world, view, and projection matrices.
 	
-	output.position.xz = input.position.xy + origin;
+	output.position.xz = input.position.xy*scale + origin;
 
 	float h = sin(output.position.x) + cos(output.position.z);
 	output.position.y = h;

@@ -211,7 +211,6 @@ void InitD3D(HWND hWnd)
 	SetupRenderFullScreenQuad();
 	TerrainTileManagerSetup();
 	SetupTerrain();
-	PrepareTerrain();
 }
 
 
@@ -251,6 +250,7 @@ void RenderFrame(void)
 // this is the function that cleans up Direct3D and COM
 void CleanD3D(void)
 {
+	TerrainTileManagerTearDown();
 	TearDownDeferred();
 	TearDownRenderFullScreenQuad();
 	TearDownTerrain();

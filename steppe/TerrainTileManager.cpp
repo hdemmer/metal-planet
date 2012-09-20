@@ -3,7 +3,7 @@
 #include "TerrainTileManager.h"
 
 #define MAX_TILES 1000
-#define MAX_VERTICES 1000
+#define MAX_VERTICES 10000
 
 struct QuadTreeNode
 {
@@ -32,7 +32,7 @@ void TraverseQuadTreeNode(QuadTreeNode * node, TerrainTile *allTiles[], UINT *nu
 		allTiles[*numTiles] = node->tile;
 		UINT i = *numTiles;
 		*numTiles = i + 1;
-		 i = *numTiles;
+		i = *numTiles;
 	} else {
 		for (int i=0; i<4; i++)
 		{
@@ -53,19 +53,59 @@ void CollapseQuadTreeNode(QuadTreeNode * node)
 		{
 			gTerrainTileManager->idleTiles->push(node->children[i]->tile);
 			node->children[i]->tile = NULL;
+			free(node->children[i]);
 		}
 	}
 
 	node->isLeaf = true;
 }
 
-QuadTreeNode * NewQuadTreeNode()
+QuadTreeNode * NewRootQuadTreeNode()
 {
-	QuadTreeNode * newNode = new QuadTreeNode;
+	// Prepare root node
+	QuadTreeNode * newRootNode = (QuadTreeNode*)malloc(sizeof(QuadTreeNode));
+	newRootNode->isLeaf = true;
+	TerrainTile * tile = gTerrainTileManager->idleTiles->top();
+	gTerrainTileManager->idleTiles->pop();
+	tile->origin = D3DXVECTOR2(0,0);
+	tile->depth=0;
+	GenerateTerrainTile(tile);
+	newRootNode->tile = tile;
+	gTerrainTileManager->rootNode = newRootNode;
+
+	return newRootNode;
+}
+
+QuadTreeNode * NewQuadTreeNode(QuadTreeNode *parent, int childNum)
+{
+	QuadTreeNode * newNode = (QuadTreeNode*)malloc(sizeof(QuadTreeNode));
 	newNode->isLeaf = true;
 
 	TerrainTile * tile = gTerrainTileManager->idleTiles->top();
 	gTerrainTileManager->idleTiles->pop();
+
+	int xOff = 0;
+	int yOff = 0;
+	switch (childNum)
+	{
+	case 1:
+		xOff=1;
+		break;
+	case 2:
+		yOff=1;
+		break;
+	case 3:
+		xOff=1;
+		yOff=1;
+		break;
+	}
+
+	UINT depth = parent->tile->depth + 1;
+
+	float scaledTileSize = TILE_BASE_SIZE / (float)(1<<depth);
+	tile->origin = D3DXVECTOR2(parent->tile->origin.x + scaledTileSize*xOff, parent->tile->origin.y + scaledTileSize*yOff);
+	tile->depth = depth;
+	GenerateTerrainTile(tile);
 
 	newNode->tile = tile;
 
@@ -80,13 +120,14 @@ void SplitQuadTreeNode(QuadTreeNode *node)
 	if (gTerrainTileManager->idleTiles->size() < 4)
 	{
 		printf("Not enough free tiles left for split.");
-		
+
 		return;
 	}
 
 	for (int i=0;i<4;i++)
 	{
-		node->children[i]=NewQuadTreeNode();
+		node->children[i]=NewQuadTreeNode(node, i);
+		// TODO: if any of these fail, we have run out of memory
 	}
 
 	node->isLeaf = false;
@@ -119,12 +160,20 @@ void TerrainTileManagerSetup()
 		gTerrainTileManager->idleTiles->push(tile);
 	}
 
-	// Prepare root node
-	gTerrainTileManager->rootNode = NewQuadTreeNode();
+	gTerrainTileManager->rootNode = NULL;
 }
 
 void TerrainTileManagerUpdate()
 {
+	if (!gTerrainTileManager->rootNode)
+		gTerrainTileManager->rootNode = NewRootQuadTreeNode();
+
+	if (gTerrainTileManager->rootNode->isLeaf)
+	{
+		SplitQuadTreeNode(gTerrainTileManager->rootNode);
+	}else {
+		CollapseQuadTreeNode(gTerrainTileManager->rootNode);
+	}
 }
 
 void TerrainTileManagerTearDown()
@@ -132,14 +181,14 @@ void TerrainTileManagerTearDown()
 }
 
 
-void TerrainTileManagerAllTiles(TerrainTile** outAllTiles, UINT *outNumTiles)
+void TerrainTileManagerAllLeafTiles(TerrainTile** outAllTiles[], UINT *outNumTiles)
 {
-	TerrainTile *allTiles = (TerrainTile*)malloc(sizeof(TerrainTile)*MAX_TILES);
+	TerrainTile **allTiles = (TerrainTile**)malloc(sizeof(TerrainTile*)*MAX_TILES);
 
 	UINT numTiles = 0;
 
-	TraverseQuadTreeNode(gTerrainTileManager->rootNode, &allTiles, &numTiles);
+	TraverseQuadTreeNode(gTerrainTileManager->rootNode, allTiles, &numTiles);
 
 	*outNumTiles = numTiles;
-	outAllTiles = &allTiles;
+	*outAllTiles = allTiles;
 }

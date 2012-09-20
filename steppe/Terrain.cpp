@@ -2,14 +2,11 @@
 #include "Globals.h"
 #include "Terrain.h"
 
+#include "TerrainTileManager.h"
 
 ID3D11Buffer * terrainVertexBuffer;
 
 ID3D11Buffer * terrainConstantsBuffer;
-
-#define NUM_TILES 1024
-
-ID3D11Buffer * terrainStreamOutBuffer[NUM_TILES];
 
 ID3D11VertexShader * terrainVertexShader;
 ID3D11InputLayout * terrainInputLayout;
@@ -24,17 +21,14 @@ struct TerrainVertexType
 struct TerrainConstantsBufferType
 {
 	D3DXVECTOR2 origin;
-	D3DXVECTOR2 fill;
+	float scale;
+	float padding;
 };
 
-#define TILE_SIZE 10
 #define GRID_SIZE 16
 
-void PrepareTerrain()
+void GenerateTerrainTile(TerrainTile*tile)
 {
-	for(int i=0; i<NUM_TILES; i++)
-	{
-
 	unsigned int stride;
 	unsigned int offset;
 
@@ -52,17 +46,17 @@ void PrepareTerrain()
 	TerrainConstantsBufferType * dataPtr;
 	devcon->Map(terrainConstantsBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	dataPtr = (TerrainConstantsBufferType*)mappedResource.pData;
-	dataPtr->origin = D3DXVECTOR2(-5,-5+TILE_SIZE * i);
+	dataPtr->origin = tile->origin;
+	dataPtr->scale = 1.0f / (float)(1 << tile->depth);
 	devcon->Unmap(terrainConstantsBuffer, 0);
 	devcon->VSSetConstantBuffers(0, 1, &terrainConstantsBuffer);
 
-	devcon->SOSetTargets(1,&terrainStreamOutBuffer[i],&offset);
+	devcon->SOSetTargets(1,&tile->vertexBuffer,&offset);
 
 	devcon->Draw(GRID_SIZE*GRID_SIZE*6,0);
 
 	ID3D11Buffer * pBuf = NULL;
 	devcon->SOSetTargets(1,&pBuf,&offset);
-	}
 }
 
 void SetupTerrain()
@@ -73,7 +67,7 @@ void SetupTerrain()
 	UINT vertexCount = GRID_SIZE*GRID_SIZE*6;
 	TerrainVertexType * vertices = (TerrainVertexType*)malloc(sizeof(TerrainVertexType)*vertexCount);
 
-	float scale = TILE_SIZE / (float)GRID_SIZE;
+	float scale = TILE_BASE_SIZE / (float)GRID_SIZE;
 
 	for (int i=0;i<GRID_SIZE;i++)
 	{
@@ -107,20 +101,6 @@ void SetupTerrain()
 	dev->CreateBuffer(&vertexBufferDesc, &vertexData, &terrainVertexBuffer);
 
 	free(vertices);
-
-	D3D11_BUFFER_DESC streamOutBufferDesc;
-
-	streamOutBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	streamOutBufferDesc.ByteWidth = sizeof(DeferredVertexType) *vertexCount;
-	streamOutBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER | D3D11_BIND_STREAM_OUTPUT;
-	streamOutBufferDesc.CPUAccessFlags = 0;
-	streamOutBufferDesc.MiscFlags = 0;
-	streamOutBufferDesc.StructureByteStride = 0;
-
-	for (int i=0;i<NUM_TILES;i++)
-	{
-	dev->CreateBuffer(&streamOutBufferDesc, NULL, &terrainStreamOutBuffer[i]);
-	}
 
 	ID3D10Blob* errorMessage = NULL;
 	ID3D10Blob* vertexShaderBlob = NULL;
@@ -184,18 +164,13 @@ void TearDownTerrain()
 	terrainVertexShader->Release();
 	terrainInputLayout->Release();
 
-	for (int i=0; i<NUM_TILES;i++)
-	{
-		terrainStreamOutBuffer[i]->Release();
-	}
 	terrainDummyGS->Release();
 
 	terrainConstantsBuffer->Release();
 }
 
 
-
-void RenderTerrain()
+void RenderTerrainTile(TerrainTile* tile)
 {
 	unsigned int stride;
 	unsigned int offset;
@@ -203,26 +178,31 @@ void RenderTerrain()
 	stride = sizeof(DeferredVertexType); 
 	offset = 0;
 
-	devcon->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	for (int i=0; i<NUM_TILES;i++)
-	{
-		devcon->IASetVertexBuffers(0,1,&terrainStreamOutBuffer[i],&stride,&offset);
-		devcon->DrawAuto();
-	}
+	devcon->IASetVertexBuffers(0,1,&tile->vertexBuffer,&stride,&offset);
+	devcon->DrawAuto();
 }
 
-#include "TerrainTileManager.h"
+void RenderTerrain()
+{
+	
+	devcon->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	TerrainTile ** allTiles = NULL;
+	UINT numTiles = 0;
+
+	TerrainTileManagerAllLeafTiles(&allTiles, &numTiles);
+
+	for (UINT i = 0; i < numTiles; i++)
+	{
+		TerrainTile * tile = allTiles[i];
+		printf("Render Tile: %f,%f\n", tile->origin.x, tile->origin.y);
+
+		RenderTerrainTile(tile);
+	}
+	printf("\n");
+}
 
 void UpdateTerrain()
 {
-	TerrainTile * allTiles = NULL;
-	UINT numTiles = 0;
-
-	TerrainTileManagerAllTiles(&allTiles, &numTiles);
-
-	for (int i = 0; i < numTiles; i++)
-	{
-		printf("Tile\n");
-	}
-	printf("\n");
+	TerrainTileManagerUpdate();
 }
