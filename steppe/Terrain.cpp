@@ -5,13 +5,14 @@
 #include "TerrainTileManager.h"
 
 ID3D11Buffer * terrainVertexBuffer;
-
 ID3D11Buffer * terrainConstantsBuffer;
 
 ID3D11VertexShader * terrainVertexShader;
 ID3D11InputLayout * terrainInputLayout;
 
 ID3D11GeometryShader * terrainDummyGS;
+
+ID3D11Buffer * terrainIndexBuffer;
 
 struct TerrainVertexType
 {
@@ -38,6 +39,7 @@ void GenerateTerrainTile(TerrainTile*tile)
 	devcon->IASetInputLayout(terrainInputLayout);
 	devcon->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
 	devcon->IASetVertexBuffers(0,1,&terrainVertexBuffer,&stride,&offset);
+	devcon->IASetIndexBuffer( terrainIndexBuffer, DXGI_FORMAT_R32_UINT, 0 );
 
 	devcon->VSSetShader(terrainVertexShader, NULL,0);
 	devcon->GSSetShader(terrainDummyGS, NULL, 0);
@@ -53,7 +55,7 @@ void GenerateTerrainTile(TerrainTile*tile)
 
 	devcon->SOSetTargets(1,&tile->vertexBuffer,&offset);
 
-	devcon->Draw(GRID_SIZE*GRID_SIZE*6,0);
+	devcon->DrawIndexed(GRID_SIZE*GRID_SIZE*6,0,0);
 
 	ID3D11Buffer * pBuf = NULL;
 	devcon->SOSetTargets(1,&pBuf,&offset);
@@ -61,7 +63,7 @@ void GenerateTerrainTile(TerrainTile*tile)
 
 UINT TerrainExpectedBufferWidth()
 {
-	return sizeof(DeferredVertexType) * GRID_SIZE*GRID_SIZE*6;
+	return sizeof(DeferredVertexType) * GRID_SIZE*GRID_SIZE * 6;
 }
 
 void SetupTerrain()
@@ -69,25 +71,17 @@ void SetupTerrain()
 	D3D11_BUFFER_DESC vertexBufferDesc;
 	D3D11_SUBRESOURCE_DATA vertexData;
 
-	UINT vertexCount = GRID_SIZE*GRID_SIZE*6;
+	UINT vertexCount = (GRID_SIZE+1)*(GRID_SIZE+1);
 	TerrainVertexType * vertices = (TerrainVertexType*)malloc(sizeof(TerrainVertexType)*vertexCount);
 
 	float scale = TILE_BASE_SIZE / (float)GRID_SIZE;
 
-	for (int i=0;i<GRID_SIZE;i++)
+	for (int i=0;i<=GRID_SIZE;i++)
 	{
-		for (int j=0;j<GRID_SIZE;j++)
+		for (int j=0;j<=GRID_SIZE;j++)
 		{
-			int baseIndex = 6*(i+j*GRID_SIZE);
-
-			vertices[baseIndex+0].position=XMFLOAT2(scale*i,scale*j);
-			vertices[baseIndex+1].position=XMFLOAT2(scale*(i+1),scale*j);
-			vertices[baseIndex+2].position=XMFLOAT2(scale*i,scale*(j+1));
-
-			vertices[baseIndex+3].position=XMFLOAT2(scale*i,scale*(j+1));
-			vertices[baseIndex+4].position=XMFLOAT2(scale*(i+1),scale*(j+1));
-			vertices[baseIndex+5].position=XMFLOAT2(scale*(i+1),scale*j);
-
+			int baseIndex = (i+j*(GRID_SIZE+1));
+			vertices[baseIndex].position=XMFLOAT2(scale*i,scale*j);
 		}
 	}
 
@@ -160,6 +154,46 @@ void SetupTerrain()
 
 	// Create the constant buffer pointer so we can access the vertex shader constant buffer from within this class.
 	dev->CreateBuffer(&matrixBufferDesc, NULL, &terrainConstantsBuffer);
+
+
+
+	// Prepare Index buffer
+
+	UINT * indices = (UINT*)malloc(sizeof(UINT)*GRID_SIZE*GRID_SIZE*6);
+
+	for (int i=0;i<GRID_SIZE;i++)
+	{
+		for (int j=0;j<GRID_SIZE;j++)
+		{
+			int baseIndex = 6*(i+j*GRID_SIZE);
+
+			indices[baseIndex]=i+j*(GRID_SIZE+1);
+			indices[baseIndex+1]=i+j*(GRID_SIZE+1)+1;
+			indices[baseIndex+2]=i+(j+1)*(GRID_SIZE+1);
+
+			indices[baseIndex+3]=i+(j+1)*(GRID_SIZE+1);
+			indices[baseIndex+4]=i+(j+1)*(GRID_SIZE+1)+1;
+			indices[baseIndex+5]=i+1+j*(GRID_SIZE+1);
+		}
+	}
+
+	// Fill in a buffer description.
+	D3D11_BUFFER_DESC bufferDesc;
+	bufferDesc.Usage           = D3D11_USAGE_DEFAULT;
+	bufferDesc.ByteWidth       = sizeof( UINT ) *GRID_SIZE*GRID_SIZE * 6;
+	bufferDesc.BindFlags       = D3D11_BIND_INDEX_BUFFER;
+	bufferDesc.CPUAccessFlags  = 0;
+	bufferDesc.MiscFlags       = 0;
+
+	// Define the resource data.
+D3D11_SUBRESOURCE_DATA indicesData;
+indicesData.pSysMem = indices;
+indicesData.SysMemPitch = 0;
+indicesData.SysMemSlicePitch = 0;
+
+	dev->CreateBuffer( &bufferDesc, &indicesData, &terrainIndexBuffer );
+
+	free(indices);
 }
 
 
@@ -190,7 +224,7 @@ void RenderTerrainTile(TerrainTile* tile)
 void RenderTerrain()
 {
 	
-	devcon->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	devcon->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
 
 	TerrainTile ** allTiles = NULL;
 	UINT numTiles = 0;

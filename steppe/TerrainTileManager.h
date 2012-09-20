@@ -5,6 +5,7 @@
 struct TerrainTile
 {
 	ID3D11Buffer * vertexBuffer;
+	ID3D11Buffer * indexBuffer;
 
 	XMFLOAT2 origin;
 	

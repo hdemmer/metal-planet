@@ -9,7 +9,7 @@ ID3D11ShaderResourceView* renderTargetResourceView[NUM_MRTS];
 
 ID3D11Texture2D* depthStencilBuffer;
 ID3D11DepthStencilView * depthStencilView;
-
+ID3D11DepthStencilState * depthStencilState;
 
 ID3D11Buffer * deferredConstantsBuffer;
 ID3D11VertexShader * deferredVertexShader;
@@ -203,6 +203,23 @@ void SetupDeferred()
 	descDSV.Texture2D.MipSlice = 0;
 
 	result=dev->CreateDepthStencilView(depthStencilBuffer,&descDSV,&depthStencilView);
+
+	// Create Depth stencil state
+
+	D3D11_DEPTH_STENCIL_DESC dsDesc;
+
+	// Depth test parameters
+	dsDesc.DepthEnable = true;
+	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	dsDesc.DepthFunc = D3D11_COMPARISON_LESS;
+
+	// Stencil test parameters
+	dsDesc.StencilEnable = false;
+	dsDesc.StencilReadMask = 0xFF;
+	dsDesc.StencilWriteMask = 0xFF;
+
+	// Create depth stencil state
+	dev->CreateDepthStencilState(&dsDesc, &depthStencilState);
 }
 
 
@@ -221,32 +238,14 @@ void TearDownDeferred()
 
 	for (int i=0; i<NUM_MRTS; i++)
 	{
-	renderTargetTexture[i]->Release();
-	renderTargetView[i]->Release();
-	renderTargetResourceView[i]->Release();
+		renderTargetTexture[i]->Release();
+		renderTargetView[i]->Release();
+		renderTargetResourceView[i]->Release();
 	}
 
 	depthStencilBuffer->Release();
 	depthStencilView->Release();
-}
-
-#include <stdio.h>
-
-void PrintD3DMatrix(const char* name, D3DXMATRIX &mat)
-{
-	char buf[300];
-	sprintf(buf, "Printing D3D Matrix: - %s\n"
-		//	"\t 1 \t 2 \t 3 \t 4\n"
-		"\t %f \t %f \t %f \t %f\n"
-		"\t %f \t %f \t %f \t %f\n"
-		"\t %f \t %f \t %f \t %f\n"
-		"\t %f \t %f \t %f \t %f\n", name,
-		mat._11, mat._12, mat._13, mat._14,
-		mat._21, mat._22, mat._23, mat._24,
-		mat._31, mat._32, mat._33, mat._34,
-		mat._41, mat._42, mat._43, mat._44);
-
-	printf(buf);
+	depthStencilState->Release();
 }
 
 #include "Player.h"
@@ -284,6 +283,8 @@ void SetDeferredRenderer()
 
 	// Bind the render target view and depth stencil buffer to the output render pipeline.
 	devcon->OMSetRenderTargets(NUM_MRTS, renderTargetView, depthStencilView);
+	// Bind depth stencil state
+	devcon->OMSetDepthStencilState(depthStencilState, 1);
 
 	devcon->RSSetViewports(1, &viewport);
 
@@ -308,11 +309,11 @@ void SetDeferredRenderer()
 void RenderDeferredLighting()
 {
 	ID3D11SamplerState * samplerStates[4] = {sampleStatePoint};
-	
+
 	devcon->PSSetShader(deferredLightingPixelShader,NULL,0);
 
 	devcon->PSSetShaderResources(0, NUM_MRTS, renderTargetResourceView);
-	
+
 	devcon->PSSetSamplers(0, NUM_MRTS, samplerStates);
 	RenderFullScreenQuad();
 

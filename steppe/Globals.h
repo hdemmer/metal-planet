@@ -17,7 +17,7 @@ extern void OutputShaderErrorMessage(ID3D10Blob* errorMessage);
 #define SCREEN_WIDTH  800
 #define SCREEN_HEIGHT 600
 
-#define WORLD_SIZE 10000
+#define WORLD_SIZE 100
 
 struct DeferredVertexType
 {
