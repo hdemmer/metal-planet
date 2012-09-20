@@ -117,7 +117,7 @@ void PlayerSetup()
     dinmouse->SetCooperativeLevel(ghWnd, DISCL_EXCLUSIVE | DISCL_FOREGROUND);
 
 
-	XMStoreFloat3(&gPlayerPosition,XMVectorSet(0,0,-10,0));
+	XMStoreFloat3(&gPlayerPosition,XMVectorSet(0,2,-10,0));
 	gPlayerPitch = 0.0f;
 	gPlayerYaw = 0.0f;
 }

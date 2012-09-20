@@ -124,10 +124,19 @@ void SplitQuadTreeNode(QuadTreeNode *node)
 
 void UpdateQuadTreeNode(QuadTreeNode * node)
 {
-	float tileWidth = TILE_BASE_SIZE / (float)(1<< node->tile->depth);
-	float distance = XMVectorGetX(XMVector3Length(XMLoadFloat3(&gPlayerPosition)-XMLoadFloat2(&node->tile->origin)-XMLoadFloat2(&XMFLOAT2(tileWidth/2.0,tileWidth/2.0))));
+	float tileHalfWidth = TILE_BASE_SIZE / (float)(2<< node->tile->depth);
 
-	float factor = distance/tileWidth;
+	float factor = 2.0;
+
+	XMFLOAT2 tileOrigin = node->tile->origin;
+
+
+	//float distance = XMVectorGetX(XMVector3Length(XMLoadFloat3(&gPlayerPosition)-XMLoadFloat2(&node->tile->origin)-XMLoadFloat2(&XMFLOAT2(tileWidth/2.0,tileWidth/2.0))));
+
+	printf("player : %f,%f \n", gPlayerPosition.x, gPlayerPosition.y);
+
+	if (abs(gPlayerPosition.x-tileHalfWidth-tileOrigin.x) < tileHalfWidth && abs(gPlayerPosition.z -tileHalfWidth- tileOrigin.y) <tileHalfWidth)
+		factor = 0.0;
 
 	if (!node->isLeaf)
 	{
@@ -142,10 +151,7 @@ void UpdateQuadTreeNode(QuadTreeNode * node)
 		}
 	} else {
 		
-		printf("node at %f : %f: ",node->tile->origin.x,node->tile->origin.y);
-		printf("distance: %f\n", distance);
-
-		if (factor <1 && node->tile->depth < 5)
+		if (factor <1 && node->tile->depth < 10)
 		{
 			SplitQuadTreeNode(node);
 		}
