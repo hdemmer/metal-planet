@@ -77,6 +77,7 @@
     <ClCompile Include="Deferred.cpp" />
     <ClCompile Include="FullScreenQuad.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Player.cpp" />
     <ClCompile Include="Terrain.cpp" />
     <ClCompile Include="TerrainTileManager.cpp" />
   </ItemGroup>
@@ -84,6 +85,7 @@
     <ClInclude Include="Deferred.h" />
     <ClInclude Include="FullScreenQuad.h" />
     <ClInclude Include="Globals.h" />
+    <ClInclude Include="Player.h" />
     <ClInclude Include="Terrain.h" />
     <ClInclude Include="TerrainTileManager.h" />
   </ItemGroup>

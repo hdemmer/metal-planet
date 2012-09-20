@@ -1,5 +1,4 @@
 
-// include the basic windows header files and the Direct3D header files
 #include <windows.h>
 #include <windowsx.h>
 
@@ -9,6 +8,7 @@
 #include "FullScreenQuad.h"
 #include "Terrain.h"
 #include "TerrainTileManager.h"
+#include "Player.h"
 
 // include the Direct3D Library file
 #pragma comment (lib, "d3d11.lib")
@@ -16,15 +16,20 @@
 #pragma comment (lib, "d3dx10.lib")
 
 // global declarations
+
+HWND ghWnd;
+HINSTANCE ghInstance;
+
 IDXGISwapChain *swapchain;             // the pointer to the swap chain interface
 ID3D11Device *dev;                     // the pointer to our Direct3D device interface
 ID3D11DeviceContext *devcon;           // the pointer to our Direct3D device context
 ID3D11RenderTargetView *backbuffer;    // the pointer to our back buffer
 
+
 // function prototypes
-void InitD3D(HWND hWnd);    // sets up and initializes Direct3D
-void RenderFrame(void);     // renders a single frame
-void CleanD3D(void);        // closes Direct3D and releases memory
+void InitD3D();
+void RenderFrame(); 
+void CleanD3D();
 
 // the WindowProc function prototype
 LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
@@ -120,8 +125,11 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
 	ShowWindow(hWnd, nCmdShow);
 
+	ghWnd = hWnd;
+	ghInstance = ghInstance;
+
 	// set up and initialize Direct3D
-	InitD3D(hWnd);
+	InitD3D();
 
 	// enter the main loop:
 
@@ -165,7 +173,7 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 
 
 // this function initializes and prepares Direct3D for use
-void InitD3D(HWND hWnd)
+void InitD3D()
 {
 	// create a struct to hold information about the swap chain
 	DXGI_SWAP_CHAIN_DESC scd;
@@ -179,7 +187,7 @@ void InitD3D(HWND hWnd)
 	scd.BufferDesc.Width = SCREEN_WIDTH;                    // set the back buffer width
 	scd.BufferDesc.Height = SCREEN_HEIGHT;                  // set the back buffer height
 	scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;      // how swap chain is to be used
-	scd.OutputWindow = hWnd;                                // the window to be used
+	scd.OutputWindow = ghWnd;                                // the window to be used
 	scd.SampleDesc.Count = 4;                               // how many multisamples
 	scd.Windowed = TRUE;                                    // windowed/full-screen mode
 	scd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;     // allow full-screen switching
@@ -211,6 +219,8 @@ void InitD3D(HWND hWnd)
 	SetupRenderFullScreenQuad();
 	TerrainTileManagerSetup();
 	SetupTerrain();
+
+	PlayerSetup();
 }
 
 
@@ -224,6 +234,8 @@ void RenderFrame(void)
 	viewport.TopLeftY = 0;
 	viewport.Width = SCREEN_WIDTH;
 	viewport.Height = SCREEN_HEIGHT;
+
+	PlayerUpdate();
 
 	UpdateTerrain();
 
@@ -254,6 +266,7 @@ void CleanD3D(void)
 	TearDownDeferred();
 	TearDownRenderFullScreenQuad();
 	TearDownTerrain();
+	PlayerTearDown();
 
 	swapchain->SetFullscreenState(FALSE, NULL);    // switch to windowed mode
 
