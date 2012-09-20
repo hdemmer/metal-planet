@@ -53,10 +53,7 @@ PixelOutputType DeferredPixelShader(PixelInputType input)
 	PixelOutputType output;
 	output.position=input.position;
 	output.normal=input.normal;
-	float f = input.position.z+0.5;
-	output.diffuse=//input.position.xyz / input.position.w;
-	float3(f,f,f)+input.diffuse*0.5;
-		//input.diffuse;
+	output.diffuse=input.diffuse;
     return output;
 }
 

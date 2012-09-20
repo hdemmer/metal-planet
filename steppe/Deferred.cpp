@@ -299,7 +299,8 @@ void SetDeferredRenderer()
 	viewport.TopLeftY = 0;
 	viewport.Width = SCREEN_WIDTH;
 	viewport.Height = SCREEN_HEIGHT;
-
+	viewport.MinDepth=0.0;
+	viewport.MaxDepth=1.0;
 
 	// Bind the render target view and depth stencil buffer to the output render pipeline.
 	devcon->OMSetRenderTargets(NUM_MRTS, renderTargetView, depthStencilView);
