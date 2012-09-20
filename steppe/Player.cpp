@@ -1,9 +1,13 @@
 
 #include "Globals.h"
 
+
+#include <Windows.h>
+
+#define DIRECTINPUT_VERSION 0x0800
 #include <dinput.h>
 
-D3DXVECTOR3 gPlayerPosition;
+XMFLOAT3 gPlayerPosition;
 float gPlayerYaw;
 float gPlayerPitch;
 
@@ -26,10 +30,12 @@ void PlayerUpdate()
 
 	//// 
 	// move player
-
-
 	
 	// Handle input
+
+	
+	if(keystate[DIK_ESCAPE] & 0x80)
+		PostMessage(ghWnd, WM_DESTROY, 0, 0);
 	
 	XMVECTOR desiredDir = XMVectorSet( 0.0f, 0.0f, 0.0f , 0.0f);
 	if (keystate[DIK_LEFT]  & 0x80)
@@ -47,9 +53,9 @@ void PlayerUpdate()
 
 	desiredDir = XMVector4Transform(desiredDir,RotateHoriz);
 
-	XMVECTOR candidateVec = gPlayerPosition + desiredDir;//TODO: speed
+	XMVECTOR candidateVec = XMLoadFloat3(&gPlayerPosition) + desiredDir;//TODO: speed
 
-	gPlayerPosition = candidateVec;
+	XMStoreFloat3(&gPlayerPosition,candidateVec);
 	
 	gPlayerYaw -= (float)mousestate.lX*0.001f;
 	gPlayerPitch -= (float)mousestate.lY*0.001f;
@@ -65,6 +71,24 @@ void PlayerUpdate()
 
 	if (gPlayerPitch < -1*XM_PI/2)
 		gPlayerPitch = -1*XM_PI/2;
+}
+
+XMMATRIX PlayerWorldProjectionMatrix()
+{
+    // Initialize the projection matrix
+    XMMATRIX Projection = XMMatrixPerspectiveFovLH( XM_PIDIV4, SCREEN_WIDTH / (FLOAT)SCREEN_HEIGHT, 0.01f, 100.0f );
+
+
+	 // Initialize the view matrix
+	XMVECTOR Eye = XMLoadFloat3(&gPlayerPosition) + XMVectorSet( 0.0f, 1.7f, 0.0f, 0.0f ); //move to eye position
+
+    XMVECTOR At = Eye + XMVectorSet( 0.0f, 0.0f, 1.0f, 0.0f );
+    XMVECTOR Up = XMVectorSet( 0.0f, 1.0f, 0.0f, 0.0f );
+    XMMATRIX View = XMMatrixLookAtLH( Eye, At, Up );
+	XMMATRIX RotateHoriz = XMMatrixRotationY( gPlayerYaw );
+	XMMATRIX RotateVert = XMMatrixRotationX( gPlayerPitch );
+
+    return View*RotateHoriz*RotateVert*Projection;		//Player rotation
 }
 
 void PlayerSetup()
@@ -93,7 +117,7 @@ void PlayerSetup()
     dinmouse->SetCooperativeLevel(ghWnd, DISCL_EXCLUSIVE | DISCL_FOREGROUND);
 
 
-	gPlayerPosition = D3DXVECTOR3(0,10,-10);
+	XMStoreFloat3(&gPlayerPosition,XMVectorSet(0,0,-10,0));
 	gPlayerPitch = 0.0f;
 	gPlayerYaw = 0.0f;
 }

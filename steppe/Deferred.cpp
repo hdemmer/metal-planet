@@ -25,7 +25,7 @@ ID3D11SamplerState* sampleStatePoint;
 
 struct MatrixBufferType
 {
-	D3DXMATRIX modelViewProjection;
+	XMMATRIX modelViewProjection;
 };
 
 
@@ -249,27 +249,10 @@ void PrintD3DMatrix(const char* name, D3DXMATRIX &mat)
 	printf(buf);
 }
 
+#include "Player.h"
+
 void UpdateDeferred()
 {
-	D3DXMATRIX projectionMatrix;
-	D3DXMATRIX lookAtMatrix;
-	D3DXMATRIX modelViewProjectionMatrix;
-
-	// Setup the projection matrix.
-	float fieldOfView = (float)D3DX_PI / 4.0f;
-	float screenAspect = (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT;
-
-	// Create the projection matrix for 3D rendering.
-	D3DXMatrixPerspectiveFovLH(&projectionMatrix, fieldOfView, screenAspect, 0.1, 1000.0);
-
-	D3DXMATRIX transposed;
-
-	D3DXMatrixLookAtLH(&lookAtMatrix, &D3DXVECTOR3(0,10,-10), &D3DXVECTOR3(0,0,0), &D3DXVECTOR3(0,1,0));
-
-	D3DXMatrixMultiply(&modelViewProjectionMatrix, &lookAtMatrix, &projectionMatrix);
-
-	D3DXMatrixTranspose(&transposed,&modelViewProjectionMatrix);
-
 	// setup parameters
 
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -282,7 +265,7 @@ void UpdateDeferred()
 	dataPtr = (MatrixBufferType*)mappedResource.pData;
 
 	// Copy the matrices into the constant buffer.
-	dataPtr->modelViewProjection = transposed;
+	dataPtr->modelViewProjection = XMMatrixTranspose(PlayerWorldProjectionMatrix());
 
 	// Unlock the constant buffer.
 	devcon->Unmap(deferredConstantsBuffer, 0);
