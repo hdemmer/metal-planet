@@ -9,4 +9,7 @@ void PlayerSetup();
 
 void PlayerTearDown();
 
-XMMATRIX PlayerWorldProjectionMatrix();
+XMMATRIX PlayerWorldMatrix();
+XMMATRIX PlayerViewMatrix();
+XMMATRIX PlayerProjectionMatrix();
+

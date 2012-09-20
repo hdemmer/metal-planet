@@ -73,11 +73,8 @@ void PlayerUpdate()
 		gPlayerPitch = -1*XM_PI/2;
 }
 
-XMMATRIX PlayerWorldProjectionMatrix()
+XMMATRIX PlayerWorldMatrix()
 {
-    // Initialize the projection matrix
-    XMMATRIX Projection = XMMatrixPerspectiveFovLH( XM_PIDIV4, SCREEN_WIDTH / (FLOAT)SCREEN_HEIGHT, 0.1f, WORLD_SIZE );
-
 
 	 // Initialize the view matrix
 	XMVECTOR Eye = XMLoadFloat3(&gPlayerPosition) + XMVectorSet( 0.0f, 1.7f, 0.0f, 0.0f ); //move to eye position
@@ -85,14 +82,28 @@ XMMATRIX PlayerWorldProjectionMatrix()
     XMVECTOR At = Eye + XMVectorSet( 0.0f, 0.0f, 1.0f, 0.0f );
     XMVECTOR Up = XMVectorSet( 0.0f, 1.0f, 0.0f, 0.0f );
     XMMATRIX View = XMMatrixLookAtLH( Eye, At, Up );
+
+	return View;
+}
+
+XMMATRIX PlayerViewMatrix()
+{
+
 	XMMATRIX RotateHoriz = XMMatrixRotationY( gPlayerYaw );
 	XMMATRIX RotateVert = XMMatrixRotationX( gPlayerPitch );
 
-	XMMATRIX total = View*RotateHoriz*RotateVert*Projection;
-
-
-    return total;		//Player rotation
+	return RotateHoriz*RotateVert;
 }
+
+XMMATRIX PlayerProjectionMatrix()
+{
+    // Initialize the projection matrix
+    XMMATRIX Projection = XMMatrixPerspectiveFovLH( XM_PIDIV4, SCREEN_WIDTH / (FLOAT)SCREEN_HEIGHT, 0.1f, WORLD_SIZE );
+
+	return Projection;
+}
+
+
 
 void PlayerSetup()
 {

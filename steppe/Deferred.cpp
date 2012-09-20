@@ -27,7 +27,9 @@ ID3D11SamplerState* sampleStatePoint;
 
 struct MatrixBufferType
 {
-	XMMATRIX modelViewProjection;
+	XMMATRIX world;
+	XMMATRIX view;
+	XMMATRIX projection;
 };
 
 
@@ -284,7 +286,9 @@ void UpdateDeferred()
 	dataPtr = (MatrixBufferType*)mappedResource.pData;
 
 	// Copy the matrices into the constant buffer.
-	dataPtr->modelViewProjection = XMMatrixTranspose(PlayerWorldProjectionMatrix());
+	dataPtr->world = XMMatrixTranspose(PlayerWorldMatrix());
+	dataPtr->view = XMMatrixTranspose(PlayerViewMatrix());
+	dataPtr->projection = XMMatrixTranspose(PlayerProjectionMatrix());
 
 	// Unlock the constant buffer.
 	devcon->Unmap(deferredConstantsBuffer, 0);

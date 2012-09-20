@@ -1,7 +1,9 @@
 
 cbuffer deferredConstantsBuffer
 {
-    matrix modelViewProjectionMatrix;
+	matrix worldMatrix;
+    matrix viewMatrix;
+	matrix projectionMatrix;
 };
 
 //////////////
@@ -38,9 +40,11 @@ PixelInputType DeferredVertexShader(VertexInputType input)
     
     // Calculate the position of the vertex against the world, view, and projection matrices.
 	
-    output.position.xyz = input.position;
-	output.position.w = 1.0;
-	output.position = mul(output.position, modelViewProjectionMatrix);
+	output.position = mul(float4(input.position,1.0), worldMatrix);
+	output.position = mul(output.position, viewMatrix);
+	output.position = mul(output.position, projectionMatrix);
+
+	//float4 transformedNormal = mul(float4(input.normal,1.0), viewMatrix);
 
 	output.normal = input.normal;
 	output.diffuse = input.diffuse;
@@ -73,10 +77,11 @@ Texture2D positionTexture  : register(t0);
 Texture2D normalTexture : register(t1);
 Texture2D diffuseTexture : register(t2);
 
-
 float4 DeferredLightingPixelShader(LightingPixelInputType input) : SV_TARGET
 {
-    return positionTexture.Sample(pointSampler, input.texCoord)*0.0+normalTexture.Sample(pointSampler, input.texCoord)+diffuseTexture.Sample(pointSampler, input.texCoord)*0.0;
+	float3 normal = normalTexture.Sample(pointSampler, input.texCoord);
+
+    return diffuseTexture.Sample(pointSampler, input.texCoord)*saturate(dot(normal,float3(0,1,0)));
 }
 
 
