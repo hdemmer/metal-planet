@@ -76,7 +76,7 @@ Texture2D diffuseTexture : register(t2);
 
 float4 DeferredLightingPixelShader(LightingPixelInputType input) : SV_TARGET
 {
-    return positionTexture.Sample(pointSampler, input.texCoord)*0.0+normalTexture.Sample(pointSampler, input.texCoord)*0.0+diffuseTexture.Sample(pointSampler, input.texCoord);
+    return positionTexture.Sample(pointSampler, input.texCoord)*0.0+normalTexture.Sample(pointSampler, input.texCoord)+diffuseTexture.Sample(pointSampler, input.texCoord)*0.0;
 }
 
 

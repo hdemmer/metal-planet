@@ -53,7 +53,7 @@ void PlayerUpdate()
 
 	desiredDir = XMVector4Transform(desiredDir,RotateHoriz);
 
-	XMVECTOR candidateVec = XMLoadFloat3(&gPlayerPosition) + desiredDir*10.0;//TODO: speed
+	XMVECTOR candidateVec = XMLoadFloat3(&gPlayerPosition) + desiredDir*WORLD_SIZE*0.001;//TODO: speed
 
 	XMStoreFloat3(&gPlayerPosition,candidateVec);
 	
@@ -120,7 +120,7 @@ void PlayerSetup()
     dinmouse->SetCooperativeLevel(ghWnd, DISCL_EXCLUSIVE | DISCL_FOREGROUND);
 
 
-	XMStoreFloat3(&gPlayerPosition,XMVectorSet(0,200,-10,0));
+	XMStoreFloat3(&gPlayerPosition,XMVectorSet(0,WORLD_SIZE *0.1,-10,0));
 	gPlayerPitch = 0.0f;
 	gPlayerYaw = 0.0f;
 }
