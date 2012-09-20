@@ -59,6 +59,11 @@ void GenerateTerrainTile(TerrainTile*tile)
 	devcon->SOSetTargets(1,&pBuf,&offset);
 }
 
+UINT TerrainExpectedBufferWidth()
+{
+	return sizeof(DeferredVertexType) * GRID_SIZE*GRID_SIZE*6;
+}
+
 void SetupTerrain()
 {
 	D3D11_BUFFER_DESC vertexBufferDesc;
@@ -195,11 +200,12 @@ void RenderTerrain()
 	for (UINT i = 0; i < numTiles; i++)
 	{
 		TerrainTile * tile = allTiles[i];
-		printf("Render Tile: %f,%f\n", tile->origin.x, tile->origin.y);
+//		printf("Render Tile: %f,%f : %d\n", tile->origin.x, tile->origin.y, tile->depth);
 
 		RenderTerrainTile(tile);
 	}
-	printf("\n");
+
+	free(allTiles);
 }
 
 void UpdateTerrain()

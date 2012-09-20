@@ -11,8 +11,9 @@ struct TerrainTile
 	UINT depth;
 };
 
-#define TILE_BASE_SIZE 10
+#define TILE_BASE_SIZE WORLD_SIZE
 
+UINT TerrainExpectedBufferWidth();
 void GenerateTerrainTile(TerrainTile*tile);
 
 void TerrainTileManagerSetup();

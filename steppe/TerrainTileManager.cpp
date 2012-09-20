@@ -3,7 +3,6 @@
 #include "TerrainTileManager.h"
 
 #define MAX_TILES 1000
-#define MAX_VERTICES 10000
 
 struct QuadTreeNode
 {
@@ -84,21 +83,8 @@ QuadTreeNode * NewQuadTreeNode(QuadTreeNode *parent, int childNum)
 	TerrainTile * tile = gTerrainTileManager->idleTiles->top();
 	gTerrainTileManager->idleTiles->pop();
 
-	int xOff = 0;
-	int yOff = 0;
-	switch (childNum)
-	{
-	case 1:
-		xOff=1;
-		break;
-	case 2:
-		yOff=1;
-		break;
-	case 3:
-		xOff=1;
-		yOff=1;
-		break;
-	}
+	int xOff = childNum%2;
+	int yOff = childNum>1?1:0;
 
 	UINT depth = parent->tile->depth + 1;
 
@@ -133,52 +119,41 @@ void SplitQuadTreeNode(QuadTreeNode *node)
 	node->isLeaf = false;
 }
 
+
+#include "Player.h"
+
+void UpdateQuadTreeNode(QuadTreeNode * node)
+{
+	float tileWidth = TILE_BASE_SIZE / (float)(1<< node->tile->depth);
+	float distance = XMVectorGetX(XMVector3Length(XMLoadFloat3(&gPlayerPosition)-XMLoadFloat2(&node->tile->origin)-XMLoadFloat2(&XMFLOAT2(tileWidth/2.0,tileWidth/2.0))));
+
+	float factor = distance/tileWidth;
+
+	if (!node->isLeaf)
+	{
+		if (factor >1)
+		{
+			CollapseQuadTreeNode(node);
+		} else {
+			for (int i=0; i<4;i++)
+			{
+				UpdateQuadTreeNode(node->children[i]);
+			}
+		}
+	} else {
+		
+		printf("node at %f : %f: ",node->tile->origin.x,node->tile->origin.y);
+		printf("distance: %f\n", distance);
+
+		if (factor <1 && node->tile->depth < 5)
+		{
+			SplitQuadTreeNode(node);
+		}
+	}
+}
+
 ////////
 // Terrain Tile Manager
-
-void TerrainTileManagerSetup()
-{
-	gTerrainTileManager = new TerrainTileManager();
-
-	gTerrainTileManager->idleTiles = new std::stack<TerrainTile*>();
-
-	D3D11_BUFFER_DESC streamOutBufferDesc;
-
-	streamOutBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	streamOutBufferDesc.ByteWidth = sizeof(DeferredVertexType) * MAX_VERTICES;
-	streamOutBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER | D3D11_BIND_STREAM_OUTPUT;
-	streamOutBufferDesc.CPUAccessFlags = 0;
-	streamOutBufferDesc.MiscFlags = 0;
-	streamOutBufferDesc.StructureByteStride = 0;
-
-	for (int i=0;i<MAX_TILES;i++)
-	{
-		ID3D11Buffer * vertexBuffer;
-		dev->CreateBuffer(&streamOutBufferDesc, NULL, &vertexBuffer);
-		TerrainTile * tile = new TerrainTile();
-		tile->vertexBuffer = vertexBuffer;
-		gTerrainTileManager->idleTiles->push(tile);
-	}
-
-	gTerrainTileManager->rootNode = NULL;
-}
-
-void TerrainTileManagerUpdate()
-{
-	if (!gTerrainTileManager->rootNode)
-		gTerrainTileManager->rootNode = NewRootQuadTreeNode();
-
-	if (gTerrainTileManager->rootNode->isLeaf)
-	{
-		SplitQuadTreeNode(gTerrainTileManager->rootNode);
-	}else {
-		CollapseQuadTreeNode(gTerrainTileManager->rootNode);
-	}
-}
-
-void TerrainTileManagerTearDown()
-{
-}
 
 
 void TerrainTileManagerAllLeafTiles(TerrainTile** outAllTiles[], UINT *outNumTiles)
@@ -191,4 +166,54 @@ void TerrainTileManagerAllLeafTiles(TerrainTile** outAllTiles[], UINT *outNumTil
 
 	*outNumTiles = numTiles;
 	*outAllTiles = allTiles;
+}
+
+
+
+void TerrainTileManagerSetup()
+{
+	gTerrainTileManager = new TerrainTileManager();
+
+	gTerrainTileManager->idleTiles = new std::stack<TerrainTile*>();
+
+	D3D11_BUFFER_DESC streamOutBufferDesc;
+
+	streamOutBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	streamOutBufferDesc.ByteWidth = TerrainExpectedBufferWidth();
+	streamOutBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER | D3D11_BIND_STREAM_OUTPUT;
+	streamOutBufferDesc.CPUAccessFlags = 0;
+	streamOutBufferDesc.MiscFlags = 0;
+	streamOutBufferDesc.StructureByteStride = 0;
+
+	for (int i=0;i<MAX_TILES;i++)
+	{
+		ID3D11Buffer * vertexBuffer;
+		dev->CreateBuffer(&streamOutBufferDesc, NULL, &vertexBuffer);
+		TerrainTile * tile = (TerrainTile*)malloc(sizeof(TerrainTile));
+		tile->vertexBuffer = vertexBuffer;
+		gTerrainTileManager->idleTiles->push(tile);
+	}
+
+	gTerrainTileManager->rootNode = NULL;
+}
+
+void TerrainTileManagerUpdate()
+{
+	if (!gTerrainTileManager->rootNode)
+		gTerrainTileManager->rootNode = NewRootQuadTreeNode();
+
+	UpdateQuadTreeNode(gTerrainTileManager->rootNode);
+
+}
+
+void TerrainTileManagerTearDown()
+{
+	CollapseQuadTreeNode(gTerrainTileManager->rootNode);
+
+	while (gTerrainTileManager->idleTiles->size())
+	{
+		gTerrainTileManager->idleTiles->top()->vertexBuffer->Release();
+		free(gTerrainTileManager->idleTiles->top());
+		gTerrainTileManager->idleTiles->pop();
+	}
 }
