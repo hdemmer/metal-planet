@@ -25,7 +25,7 @@ struct TerrainConstantsBufferType
 	float padding;
 };
 
-#define GRID_SIZE 8
+#define GRID_SIZE 64
 
 void GenerateTerrainTile(TerrainTile*tile)
 {

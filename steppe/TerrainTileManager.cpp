@@ -3,6 +3,7 @@
 #include "TerrainTileManager.h"
 
 #define MAX_TILES 1000
+#define MAX_TREE_DEPTH 12
 
 struct QuadTreeNode
 {
@@ -126,21 +127,20 @@ void UpdateQuadTreeNode(QuadTreeNode * node)
 {
 	float tileHalfWidth = TILE_BASE_SIZE / (float)(2<< node->tile->depth);
 
-	float factor = 2.0;
+	XMFLOAT2 tileCenter = node->tile->origin;
+	tileCenter.x+=tileHalfWidth;
+	tileCenter.y+=tileHalfWidth;
 
-	XMFLOAT2 tileOrigin = node->tile->origin;
+	float distance = sqrt((tileCenter.x-gPlayerPosition.x)*(tileCenter.x-gPlayerPosition.x) + (tileCenter.y-gPlayerPosition.z)*(tileCenter.y-gPlayerPosition.z));
 
+	//if (abs(gPlayerPosition.x-tileHalfWidth-tileOrigin.x) < tileHalfWidth && abs(gPlayerPosition.z -tileHalfWidth- tileOrigin.y) <tileHalfWidth)
+//		factor = 0.0;
 
-	//float distance = XMVectorGetX(XMVector3Length(XMLoadFloat3(&gPlayerPosition)-XMLoadFloat2(&node->tile->origin)-XMLoadFloat2(&XMFLOAT2(tileWidth/2.0,tileWidth/2.0))));
-
-	printf("player : %f,%f \n", gPlayerPosition.x, gPlayerPosition.y);
-
-	if (abs(gPlayerPosition.x-tileHalfWidth-tileOrigin.x) < tileHalfWidth && abs(gPlayerPosition.z -tileHalfWidth- tileOrigin.y) <tileHalfWidth)
-		factor = 0.0;
+	float factor = distance / tileHalfWidth;
 
 	if (!node->isLeaf)
 	{
-		if (factor >1)
+		if (factor >4)
 		{
 			CollapseQuadTreeNode(node);
 		} else {
@@ -151,7 +151,7 @@ void UpdateQuadTreeNode(QuadTreeNode * node)
 		}
 	} else {
 		
-		if (factor <1 && node->tile->depth < 10)
+		if (factor <2 && node->tile->depth < MAX_TREE_DEPTH)
 		{
 			SplitQuadTreeNode(node);
 		}
