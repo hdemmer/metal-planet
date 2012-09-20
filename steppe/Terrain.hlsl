@@ -32,11 +32,17 @@ DeferredVertexInputType TerrainVertexShader(VertexInputType input)
 	
 	output.position.xzy = input.position*scale + float3(origin,0.0);
 
-	float h = sin(output.position.x) + cos(output.position.z);
-	output.position.y += h;
+	for (float i=0.125;i<1025;i*=2)
+	{
+		float u;
+		float v;
+		sincos(i,u,v);
+		float h = 0.1*i*(sin((u*output.position.x + v*output.position.z)/i) + cos((v*output.position.x + u*output.position.z)/i));
+		output.position.y += h;
+	}
 
 	output.normal = float3(0,1,0);
-	output.diffuse=output.position*0.01+float3(0.2,0.2,0.2);
+	output.diffuse=output.position*0.001+float3(0.2,0.2,0.2);
 
     return output;
 }
