@@ -16,7 +16,7 @@ ID3D11Buffer * terrainIndexBuffer;
 
 struct TerrainVertexType
 {
-	XMFLOAT2 position;
+	XMFLOAT3 position;
 };
 
 struct TerrainConstantsBufferType
@@ -27,6 +27,8 @@ struct TerrainConstantsBufferType
 };
 
 #define GRID_SIZE 64
+#define OVERLAP_WIDTH 2
+
 
 void GenerateTerrainTile(TerrainTile*tile)
 {
@@ -74,14 +76,26 @@ void SetupTerrain()
 	UINT vertexCount = (GRID_SIZE+1)*(GRID_SIZE+1);
 	TerrainVertexType * vertices = (TerrainVertexType*)malloc(sizeof(TerrainVertexType)*vertexCount);
 
-	float scale = TILE_BASE_SIZE / (float)GRID_SIZE;
+	float scale = TILE_BASE_SIZE / (float)(GRID_SIZE - 2* OVERLAP_WIDTH);
 
 	for (int i=0;i<=GRID_SIZE;i++)
 	{
 		for (int j=0;j<=GRID_SIZE;j++)
 		{
+			float overlap = 0;
+			if (i< OVERLAP_WIDTH)
+				overlap+=OVERLAP_WIDTH-i;
+			if (i >= GRID_SIZE - OVERLAP_WIDTH)
+				overlap+=i-GRID_SIZE + OVERLAP_WIDTH;
+			if (j< OVERLAP_WIDTH)
+				overlap+=OVERLAP_WIDTH-j;
+			if (j >= GRID_SIZE - OVERLAP_WIDTH)
+				overlap+=j-GRID_SIZE + OVERLAP_WIDTH;
+
+			overlap /= -2*OVERLAP_WIDTH;
+
 			int baseIndex = (i+j*(GRID_SIZE+1));
-			vertices[baseIndex].position=XMFLOAT2(scale*i,scale*j);
+			vertices[baseIndex].position=XMFLOAT3(scale*(i-OVERLAP_WIDTH),scale*(j-OVERLAP_WIDTH),overlap);
 		}
 	}
 
@@ -116,7 +130,7 @@ void SetupTerrain()
 
 	D3D11_INPUT_ELEMENT_DESC inputLayout[] =
 	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, 
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, 
 		D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	};
 

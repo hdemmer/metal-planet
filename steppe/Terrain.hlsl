@@ -11,7 +11,7 @@ cbuffer terrainConstantsBuffer
 //////////////
 struct VertexInputType
 {
-    float2 position : POSITION;
+    float3 position : POSITION;
 };
 
 struct DeferredVertexInputType
@@ -30,10 +30,10 @@ DeferredVertexInputType TerrainVertexShader(VertexInputType input)
     
     // Calculate the position of the vertex against the world, view, and projection matrices.
 	
-	output.position.xz = input.position.xy*scale + origin;
+	output.position.xzy = input.position*scale + float3(origin,0.0);
 
 	float h = sin(output.position.x) + cos(output.position.z);
-	output.position.y = h;
+	output.position.y += h;
 
 	output.normal = float3(0,1,0);
 	output.diffuse=output.position*0.01+float3(0.2,0.2,0.2);
