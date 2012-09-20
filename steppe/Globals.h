@@ -19,9 +19,9 @@ extern void OutputShaderErrorMessage(ID3D10Blob* errorMessage);
 
 struct DeferredVertexType
 {
-	D3DXVECTOR3 position;
-	D3DXVECTOR3 normal;
-	D3DXVECTOR3 diffuse;
+	XMFLOAT3 position;
+	XMFLOAT3 normal;
+	XMFLOAT3 diffuse;
 };
 
 extern HWND ghWnd;

@@ -9,8 +9,8 @@ ID3D11InputLayout * fullScreenQuadInputLayout;
 
 struct FullScreenQuadVertexType
 	{
-		D3DXVECTOR3 position;
-		D3DXVECTOR2 texCoord;
+		XMFLOAT3 position;
+		XMFLOAT2 texCoord;
 	};
 
 void SetupRenderFullScreenQuad()
@@ -21,28 +21,28 @@ void SetupRenderFullScreenQuad()
 	int vertexCount = 6;
 	FullScreenQuadVertexType * vertices = (FullScreenQuadVertexType*)malloc(sizeof(FullScreenQuadVertexType)*vertexCount);
 
-	vertices[0].position=D3DXVECTOR3(-1,1,0);
-	vertices[0].texCoord = D3DXVECTOR2(0,0);
+	vertices[0].position=XMFLOAT3(-1,1,0);
+	vertices[0].texCoord = XMFLOAT2(0,0);
 
-	vertices[1].position = D3DXVECTOR3(
+	vertices[1].position = XMFLOAT3(
 		1,1,0);
-	vertices[1].texCoord = D3DXVECTOR2(1,0);
+	vertices[1].texCoord = XMFLOAT2(1,0);
 
-	vertices[2].position = D3DXVECTOR3(
+	vertices[2].position = XMFLOAT3(
 		1,-1,0);
-	vertices[2].texCoord = D3DXVECTOR2(1,1);
+	vertices[2].texCoord = XMFLOAT2(1,1);
 	
-	vertices[3].position = D3DXVECTOR3(
+	vertices[3].position = XMFLOAT3(
 		1,-1,0);
-	vertices[3].texCoord = D3DXVECTOR2(1,1);
+	vertices[3].texCoord = XMFLOAT2(1,1);
 
-	vertices[4].position = D3DXVECTOR3(
+	vertices[4].position = XMFLOAT3(
 		-1,-1,0);
-	vertices[4].texCoord = D3DXVECTOR2(0,1);
+	vertices[4].texCoord = XMFLOAT2(0,1);
 
-	vertices[5].position = D3DXVECTOR3(
+	vertices[5].position = XMFLOAT3(
 		-1,1,0);
-	vertices[5].texCoord = D3DXVECTOR2(0,0);
+	vertices[5].texCoord = XMFLOAT2(0,0);
 	
 
 	vertexBufferDesc.Usage = D3D11_USAGE_DYNAMIC;

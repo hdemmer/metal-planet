@@ -15,12 +15,12 @@ ID3D11GeometryShader * terrainDummyGS;
 
 struct TerrainVertexType
 {
-	D3DXVECTOR2 position;
+	XMFLOAT2 position;
 };
 
 struct TerrainConstantsBufferType
 {
-	D3DXVECTOR2 origin;
+	XMFLOAT2 origin;
 	float scale;
 	float padding;
 };
@@ -75,13 +75,13 @@ void SetupTerrain()
 		{
 			int baseIndex = 6*(i+j*GRID_SIZE);
 
-			vertices[baseIndex+0].position=D3DXVECTOR2(scale*i,scale*j);
-			vertices[baseIndex+1].position=D3DXVECTOR2(scale*(i+1),scale*j);
-			vertices[baseIndex+2].position=D3DXVECTOR2(scale*i,scale*(j+1));
+			vertices[baseIndex+0].position=XMFLOAT2(scale*i,scale*j);
+			vertices[baseIndex+1].position=XMFLOAT2(scale*(i+1),scale*j);
+			vertices[baseIndex+2].position=XMFLOAT2(scale*i,scale*(j+1));
 
-			vertices[baseIndex+3].position=D3DXVECTOR2(scale*i,scale*(j+1));
-			vertices[baseIndex+4].position=D3DXVECTOR2(scale*(i+1),scale*(j+1));
-			vertices[baseIndex+5].position=D3DXVECTOR2(scale*(i+1),scale*j);
+			vertices[baseIndex+3].position=XMFLOAT2(scale*i,scale*(j+1));
+			vertices[baseIndex+4].position=XMFLOAT2(scale*(i+1),scale*(j+1));
+			vertices[baseIndex+5].position=XMFLOAT2(scale*(i+1),scale*j);
 
 		}
 	}

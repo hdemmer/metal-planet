@@ -6,7 +6,7 @@ struct TerrainTile
 {
 	ID3D11Buffer * vertexBuffer;
 
-	D3DXVECTOR2 origin;
+	XMFLOAT2 origin;
 	
 	UINT depth;
 };

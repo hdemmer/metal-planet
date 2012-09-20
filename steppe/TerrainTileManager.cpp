@@ -67,7 +67,7 @@ QuadTreeNode * NewRootQuadTreeNode()
 	newRootNode->isLeaf = true;
 	TerrainTile * tile = gTerrainTileManager->idleTiles->top();
 	gTerrainTileManager->idleTiles->pop();
-	tile->origin = D3DXVECTOR2(0,0);
+	tile->origin = XMFLOAT2(0,0);
 	tile->depth=0;
 	GenerateTerrainTile(tile);
 	newRootNode->tile = tile;
@@ -103,7 +103,7 @@ QuadTreeNode * NewQuadTreeNode(QuadTreeNode *parent, int childNum)
 	UINT depth = parent->tile->depth + 1;
 
 	float scaledTileSize = TILE_BASE_SIZE / (float)(1<<depth);
-	tile->origin = D3DXVECTOR2(parent->tile->origin.x + scaledTileSize*xOff, parent->tile->origin.y + scaledTileSize*yOff);
+	tile->origin = XMFLOAT2(parent->tile->origin.x + scaledTileSize*xOff, parent->tile->origin.y + scaledTileSize*yOff);
 	tile->depth = depth;
 	GenerateTerrainTile(tile);
 
