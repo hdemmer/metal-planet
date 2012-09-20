@@ -36,7 +36,7 @@ DeferredVertexInputType TerrainVertexShader(VertexInputType input)
 	output.position.y = h;
 
 	output.normal = float3(0,1,0);
-	output.diffuse=output.position*0.1+float3(0.2,0.2,0.2);
+	output.diffuse=output.position*0.01+float3(0.2,0.2,0.2);
 
     return output;
 }

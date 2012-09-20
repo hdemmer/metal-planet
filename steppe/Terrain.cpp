@@ -167,8 +167,8 @@ void SetupTerrain()
 		{
 			int baseIndex = 6*(i+j*GRID_SIZE);
 
-			indices[baseIndex]=i+j*(GRID_SIZE+1);
-			indices[baseIndex+1]=i+j*(GRID_SIZE+1)+1;
+			indices[baseIndex]=i+j*(GRID_SIZE+1)+1;
+			indices[baseIndex+1]=i+j*(GRID_SIZE+1);
 			indices[baseIndex+2]=i+(j+1)*(GRID_SIZE+1);
 
 			indices[baseIndex+3]=i+(j+1)*(GRID_SIZE+1);
@@ -224,7 +224,7 @@ void RenderTerrainTile(TerrainTile* tile)
 void RenderTerrain()
 {
 	
-	devcon->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
+	devcon->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	TerrainTile ** allTiles = NULL;
 	UINT numTiles = 0;

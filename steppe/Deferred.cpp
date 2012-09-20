@@ -16,6 +16,8 @@ ID3D11VertexShader * deferredVertexShader;
 ID3D11InputLayout * deferredInputLayout;
 
 ID3D11PixelShader * deferredPixelShader;
+ID3D11RasterizerState * deferredRasterizerState;
+
 
 // deferred lighting stage
 
@@ -220,6 +222,22 @@ void SetupDeferred()
 
 	// Create depth stencil state
 	dev->CreateDepthStencilState(&dsDesc, &depthStencilState);
+
+	D3D11_RASTERIZER_DESC rasterDesc;
+
+	rasterDesc.AntialiasedLineEnable = false;
+	rasterDesc.CullMode = D3D11_CULL_BACK;
+	rasterDesc.DepthBias = 0;
+	rasterDesc.DepthBiasClamp = 0.0f;
+	rasterDesc.DepthClipEnable = true;
+	rasterDesc.FillMode = D3D11_FILL_SOLID;
+	rasterDesc.FrontCounterClockwise = false;
+	rasterDesc.MultisampleEnable = false;
+	rasterDesc.ScissorEnable = false;
+	rasterDesc.SlopeScaledDepthBias = 0.0f;
+
+	// Create the rasterizer state from the description we just filled out.
+	dev->CreateRasterizerState(&rasterDesc, &deferredRasterizerState);
 }
 
 
@@ -230,6 +248,8 @@ void TearDownDeferred()
 	deferredInputLayout->Release();
 
 	deferredPixelShader->Release();
+
+	deferredRasterizerState->Release();
 
 	// lighting stage
 
@@ -292,7 +312,7 @@ void SetDeferredRenderer()
 	{
 		devcon->ClearRenderTargetView(renderTargetView[i], D3DXCOLOR(0.0f, 0.0f, 0.0f, 1.0f));
 	}
-	devcon->ClearDepthStencilView(depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+	devcon->ClearDepthStencilView(depthStencilView, D3D11_CLEAR_DEPTH|D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 	/// setup shaders
 	devcon->IASetInputLayout(deferredInputLayout);
@@ -302,6 +322,8 @@ void SetDeferredRenderer()
 	devcon->PSSetShader(deferredPixelShader,NULL,0);
 
 	devcon->VSSetConstantBuffers(0, 1, &deferredConstantsBuffer);
+
+	devcon->RSSetState(deferredRasterizerState);
 }
 
 #include "FullScreenQuad.h"

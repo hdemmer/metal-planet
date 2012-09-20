@@ -113,7 +113,7 @@ void SplitQuadTreeNode(QuadTreeNode *node)
 
 	for (int i=0;i<4;i++)
 	{
-		node->children[i]=NewQuadTreeNode(node, i);
+		node->children[i]=NewQuadTreeNode(node,i);
 		// TODO: if any of these fail, we have run out of memory
 	}
 

@@ -76,7 +76,7 @@ void PlayerUpdate()
 XMMATRIX PlayerWorldProjectionMatrix()
 {
     // Initialize the projection matrix
-    XMMATRIX Projection = XMMatrixPerspectiveFovLH( XM_PIDIV4, SCREEN_WIDTH / (FLOAT)SCREEN_HEIGHT, 0.01f, 100.0f );
+    XMMATRIX Projection = XMMatrixPerspectiveFovLH( XM_PIDIV4, SCREEN_WIDTH / (FLOAT)SCREEN_HEIGHT, 0.1f, WORLD_SIZE );
 
 
 	 // Initialize the view matrix
@@ -88,7 +88,10 @@ XMMATRIX PlayerWorldProjectionMatrix()
 	XMMATRIX RotateHoriz = XMMatrixRotationY( gPlayerYaw );
 	XMMATRIX RotateVert = XMMatrixRotationX( gPlayerPitch );
 
-    return View*RotateHoriz*RotateVert*Projection;		//Player rotation
+	XMMATRIX total = View*RotateHoriz*RotateVert*Projection;
+
+
+    return total;		//Player rotation
 }
 
 void PlayerSetup()

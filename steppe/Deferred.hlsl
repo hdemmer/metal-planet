@@ -53,7 +53,10 @@ PixelOutputType DeferredPixelShader(PixelInputType input)
 	PixelOutputType output;
 	output.position=input.position;
 	output.normal=input.normal;
-	output.diffuse=input.diffuse;
+	float f = input.position.z+0.5;
+	output.diffuse=//input.position.xyz / input.position.w;
+	float3(f,f,f)+input.diffuse*0.5;
+		//input.diffuse;
     return output;
 }
 
@@ -76,7 +79,7 @@ Texture2D diffuseTexture : register(t2);
 
 float4 DeferredLightingPixelShader(LightingPixelInputType input) : SV_TARGET
 {
-    return diffuseTexture.Sample(pointSampler, input.texCoord);
+    return positionTexture.Sample(pointSampler, input.texCoord)*0.0+normalTexture.Sample(pointSampler, input.texCoord)*0.0+diffuseTexture.Sample(pointSampler, input.texCoord);
 }
 
 
