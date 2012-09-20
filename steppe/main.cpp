@@ -8,6 +8,7 @@
 #include "Deferred.h"
 #include "FullScreenQuad.h"
 #include "Terrain.h"
+#include "TerrainTileManager.h"
 
 // include the Direct3D Library file
 #pragma comment (lib, "d3d11.lib")
@@ -207,9 +208,10 @@ void InitD3D(HWND hWnd)
 	pBackBuffer->Release();
 
 	SetupDeferred();
-SetupRenderFullScreenQuad();
-SetupTerrain();
-PrepareTerrain();
+	SetupRenderFullScreenQuad();
+	TerrainTileManagerSetup();
+	SetupTerrain();
+	PrepareTerrain();
 }
 
 
@@ -223,6 +225,8 @@ void RenderFrame(void)
 	viewport.TopLeftY = 0;
 	viewport.Width = SCREEN_WIDTH;
 	viewport.Height = SCREEN_HEIGHT;
+
+	UpdateTerrain();
 
 	UpdateDeferred();	// TODO: call this in update not draw
 

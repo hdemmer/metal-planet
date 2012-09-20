@@ -1,6 +1,8 @@
 
 void PrepareTerrain();
 
+void UpdateTerrain();
+
 void SetupTerrain();
 
 void TearDownTerrain();

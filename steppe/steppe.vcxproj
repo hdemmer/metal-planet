@@ -78,12 +78,14 @@
     <ClCompile Include="FullScreenQuad.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Terrain.cpp" />
+    <ClCompile Include="TerrainTileManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Deferred.h" />
     <ClInclude Include="FullScreenQuad.h" />
     <ClInclude Include="Globals.h" />
     <ClInclude Include="Terrain.h" />
+    <ClInclude Include="TerrainTileManager.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Deferred.hlsl" />

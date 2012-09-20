@@ -4,6 +4,7 @@
 #include <d3dx11.h>
 #include <d3dx10.h>
 
+#include <stdio.h>
 
 extern ID3D11DeviceContext *devcon;
 extern ID3D11Device *dev;
@@ -20,3 +21,4 @@ struct DeferredVertexType
 	D3DXVECTOR3 normal;
 	D3DXVECTOR3 diffuse;
 };
+

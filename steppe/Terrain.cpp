@@ -65,8 +65,6 @@ void PrepareTerrain()
 	}
 }
 
-#include <stdio.h>
-
 void SetupTerrain()
 {
 	D3D11_BUFFER_DESC vertexBufferDesc;
@@ -213,4 +211,18 @@ void RenderTerrain()
 	}
 }
 
+#include "TerrainTileManager.h"
 
+void UpdateTerrain()
+{
+	TerrainTile * allTiles = NULL;
+	UINT numTiles = 0;
+
+	TerrainTileManagerAllTiles(&allTiles, &numTiles);
+
+	for (int i = 0; i < numTiles; i++)
+	{
+		printf("Tile\n");
+	}
+	printf("\n");
+}
