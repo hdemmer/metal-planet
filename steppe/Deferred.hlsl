@@ -32,7 +32,7 @@ struct PixelOutputType
 	float4 worldPosition : SV_TARGET0;
     float4 normal : SV_TARGET1;
 	float4 diffuse : SV_TARGET2;
-	float4 specular : SV_TARGET3;
+	float4 specular : SV_TARGET3;	// spec exp, spec occ
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -92,6 +92,8 @@ float4 DeferredLightingPixelShader(LightingPixelInputType input) : SV_TARGET
 
 	float3 normal = normalTexture.Sample(pointSampler, input.texCoord).xyz;
 
+	float4 specularSample = specularTexture.Sample(pointSampler, input.texCoord);
+
 // calculate blinn-phong
 
 	float3 blinnHalf = normalize( normalize(playerEyePosition.xyz-worldPosition)+normalize(lightPosition-worldPosition ));
@@ -99,12 +101,18 @@ float4 DeferredLightingPixelShader(LightingPixelInputType input) : SV_TARGET
 	float specularBase =  saturate(dot(normal,blinnHalf));
 
 	float specularIntensity = 0.0;
-	for (float i = 2; i<100; i*=2)
+	float specularExponent = specularSample.x;
+	float sum;
+	for (float i = 1; i<17; i*=2)
 	{
-		specularIntensity +=(i/100)*pow(specularBase, i);
+		sum+=1;
+		specularIntensity +=pow(specularBase, specularExponent*i);
 	}
+	specularIntensity/=sum;
 
-	float4 result =diffuseTexture.Sample(pointSampler, input.texCoord)*diffuseIntensity + float4(1.0,1.0,1.0,1.0) * specularIntensity;
+	float4 result =
+	//diffuseTexture.Sample(pointSampler, input.texCoord)*diffuseIntensity + 
+	float4(1.0,1.0,1.0,1.0) * specularIntensity * specularSample.y;
 
     return result;
 }

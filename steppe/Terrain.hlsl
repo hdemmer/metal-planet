@@ -66,7 +66,7 @@ DeferredVertexInputType TerrainGenerateVertexShader(VertexInputType input)
 	float dx=0.0;
 	float dz=0.0;
 	
-	for (float i=64;i<1025;i*=1.8)
+	for (float i=64;i<257;i*=1.8)
 	{
 		float u;
 		float v;
@@ -78,7 +78,7 @@ DeferredVertexInputType TerrainGenerateVertexShader(VertexInputType input)
 		dz +=0.01*sqrt(i)*(v*cos((v*output.position.z+u*output.position.x)/i)-u*sin((u*output.position.z+v*output.position.x)/i));
 	}
 	
-	output.position.y += h*0.1;
+	output.position.y += h;
 
 	float3 tangentU = normalize(float3(1.0,dx,0.0));
 	float3 tangentV = normalize(float3(0.0,dz,1.0));
@@ -90,17 +90,21 @@ DeferredVertexInputType TerrainGenerateVertexShader(VertexInputType input)
 
 	// texcoords
 
-	float2 texCoords = output.position.xz / 2000.0;
+	float2 texCoords = output.position.xz / 5000.0;
 
 	output.texCoords = texCoords;
 
 	// texture based displace
 
-	float4 dispSample = bumpTexture.SampleLevel(linearSampler,texCoords,mipLevel);
-	float4 dispSample2 = bumpTexture.SampleLevel(linearSampler,texCoords.yx * 10.0,mipLevel);
-	float disp = dispSample.x + dispSample2.x;
 
-	output.position += normal * 100.0 * disp;
+
+	float disp = 0.0;
+	for (float i=1;i<17;i*=4)
+	{
+		disp += 400.0 * (1.0 / i) * bumpTexture.SampleLevel(linearSampler,texCoords * i,mipLevel).x;
+	}
+
+	output.position += normal * disp;
 
     return output;
 }
@@ -116,23 +120,38 @@ PixelOutputType TerrainPixelShader(PixelInputType input)
 {
 	PixelOutputType output;
 	output.worldPosition=float4(input.worldPosition,0.0);
-	output.diffuse=float4(0.0,0.0,0.0,0.0);
-	output.specular=float4(0.0,0.0,0.0,0.0);
+	output.diffuse=float4(0.1,0.1,0.1,0.0);
 
 	// normal mapping
 
 	float3 normal = cross(input.tangentV, input.tangentU);
 	
-	float4 normalSample = normalTexture.Sample(linearSampler,input.texCoords);
-	normalSample += normalTexture.Sample(linearSampler,input.texCoords.yx * 10.0);
-
-	float normalX = normalSample.x - 1.0;
-	float normalY = normalSample.y - 1.0;
-	float normalZ = normalSample.z - 1.0;
-	normal = normalize(normalZ * normal + normalX * input.tangentU + normalY * input.tangentV);
+	float4 normalSample;
+	float sum;
 	
+	for (float i=1;i<65;i*=4)
+	{
+		sum +=1;
+		normalSample += normalTexture.Sample(linearSampler,input.texCoords * i);
+	}
+	normalSample /= sum;
+
+	float normalX = 2.0 * normalSample.x - 1.0;
+	float normalY = 2.0 * normalSample.y - 1.0;
+	float normalZ = 2.0 * normalSample.z - 1.0;
+	normal = normalize(normalZ * normal + normalX * input.tangentU + normalY * input.tangentV);
 
 	output.normal=float4(normal,0.0);
+
+	float disp = 0.0;
+	float sum2;
+	for (float i=1;i<17;i*=4)
+	{
+		sum2+= (1.0/i);
+		disp += (1.0 / i) * bumpTexture.Sample(linearSampler,input.texCoords * i).x;
+	}
+
+	output.specular=float4(10.0+20.0*disp,1.0,0.0,0.0);
 
     return output;
 }
