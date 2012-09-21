@@ -24,6 +24,7 @@ struct DeferredVertexType
 	XMFLOAT3 position;
 	XMFLOAT3 normal;
 	XMFLOAT3 diffuse;
+	XMFLOAT3 specular;
 };
 
 extern HWND ghWnd;

@@ -59,6 +59,8 @@ void SetupDeferred()
 		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, 
 		D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "DIFFUSE", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 24, 
+		D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "SPECULAR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 36, 
 		D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	};
 
@@ -67,7 +69,7 @@ void SetupDeferred()
 	// Create the vertex input layout.
 	dev->CreateInputLayout(inputLayout, numElements, vertexShaderBlob->GetBufferPointer(), 
 		vertexShaderBlob->GetBufferSize(), &deferredInputLayout);
-
+	 
 	vertexShaderBlob->Release();
 
 	// compile pixel shader

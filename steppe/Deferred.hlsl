@@ -15,6 +15,7 @@ struct VertexInputType
     float3 position : POSITION;
 	float3 normal : NORMAL;
 	float3 diffuse : DIFFUSE;
+	float3 specular : SPECULAR;	// spec exponent, spec occlusion, ???
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -24,16 +25,18 @@ struct VertexInputType
 struct PixelInputType
 {
     float4 position : SV_POSITION;
-	float3 diffuse : DIFFUSE;
 	float3 normal : NORMAL;
+	float3 diffuse : DIFFUSE;
+	float3 specular : SPECULAR;
 	float3 worldPosition : WORLD_POSITION;
 };
 
 struct PixelOutputType
 {
-    float4 diffuse : SV_TARGET0;
-	float4 normal : SV_TARGET1;
-	float4 worldPosition : SV_TARGET2;
+	float4 worldPosition : SV_TARGET0;
+    float4 normal : SV_TARGET1;
+	float4 diffuse : SV_TARGET2;
+	float4 specular : SV_TARGET3;
 };
 
 PixelInputType DeferredVertexShader(VertexInputType input)
@@ -50,6 +53,7 @@ PixelInputType DeferredVertexShader(VertexInputType input)
 
 	output.normal = input.normal;
 	output.diffuse = input.diffuse;
+	output.specular = input.specular;
 
     return output;
 }
@@ -58,6 +62,7 @@ PixelOutputType DeferredPixelShader(PixelInputType input)
 {
 	PixelOutputType output;
 	output.diffuse=float4(input.diffuse,1.0);
+	output.specular=float4(input.specular,1.0);
 	output.normal=float4(input.normal,1.0);
 	output.worldPosition=float4(input.worldPosition,0.0);
     return output;
@@ -96,9 +101,10 @@ struct LightingPixelInputType
 
 
 SamplerState pointSampler;
-Texture2D diffuseTexture  : register(t0);
+Texture2D worldPositionTexture : register(t0);
 Texture2D normalTexture : register(t1);
-Texture2D worldPositionTexture : register(t2);
+Texture2D diffuseTexture  : register(t2);
+Texture2D specularTexture  : register(t3);
 
 float4 DeferredLightingPixelShader(LightingPixelInputType input) : SV_TARGET
 {
@@ -112,7 +118,7 @@ float4 DeferredLightingPixelShader(LightingPixelInputType input) : SV_TARGET
 
 // calculate blinn-phong
 
-	float3 blinnHalf = normalize( playerEyePosition-worldPosition+lightPosition-worldPosition );
+	float3 blinnHalf = normalize( playerEyePosition.xyz-worldPosition+lightPosition-worldPosition );
 	float diffuseIntensity = saturate( dot(normal,normalize(lightPosition-worldPosition)));
 	float specularIntensity = pow( saturate(dot(normal,blinnHalf)), 40 );
 

@@ -19,6 +19,7 @@ struct DeferredVertexInputType
     float3 position : POSITION;
 	float3 normal : NORMAL;
 	float3 diffuse : DIFFUSE;
+	float3 specular : SPECULAR;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -57,6 +58,7 @@ DeferredVertexInputType TerrainVertexShader(VertexInputType input)
 	output.position += output.normal * 10.0 * disp;
 
 	output.diffuse=float3(0.7,0.7,0.7);
+	output.specular=float3(0.7,0.7,0.7);
 
     return output;
 }

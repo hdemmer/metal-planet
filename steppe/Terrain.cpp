@@ -146,9 +146,10 @@ void SetupTerrain()
 		{ 0, "POSITION", 0, 0, 3, 0 }
 		, { 0, "NORMAL", 0, 0, 3, 0 }
 		, { 0, "DIFFUSE", 0, 0, 3, 0 }
+		, { 0, "SPECULAR", 0, 0, 3, 0 }
 	};
 
-	UINT stride[1] = {9 * sizeof(float)}; // *NOT* sizeof the above array!
+	UINT stride[1] = {12 * sizeof(float)}; // *NOT* sizeof the above array!
 	UINT elems = sizeof(soDecl) / sizeof(D3D11_SO_DECLARATION_ENTRY);
 
 	HRESULT res = dev->CreateGeometryShaderWithStreamOutput(vertexShaderBlob->GetBufferPointer(), vertexShaderBlob->GetBufferSize(),soDecl,elems,stride,1,D3D11_SO_NO_RASTERIZED_STREAM,NULL, &terrainDummyGS);
