@@ -16,6 +16,10 @@ struct VertexInputType
 	float3 diffuse : DIFFUSE;
 };
 
+////////////////////////////////////////////////////////////////////////////////
+// Deferred pass
+////////////////////////////////////////////////////////////////////////////////
+
 struct PixelInputType
 {
     float4 position : SV_POSITION;
@@ -29,10 +33,6 @@ struct PixelOutputType
 	float3 normal : SV_TARGET1;
 	float3 diffuse : SV_TARGET2;
 };
-
-////////////////////////////////////////////////////////////////////////////////
-// Deferred pass
-////////////////////////////////////////////////////////////////////////////////
 
 PixelInputType DeferredVertexShader(VertexInputType input)
 {
@@ -62,6 +62,27 @@ PixelOutputType DeferredPixelShader(PixelInputType input)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// Z-Prepass pass
+////////////////////////////////////////////////////////////////////////////////
+
+
+float4 ZPrePassVertexShader(VertexInputType input) : SV_POSITION
+{
+    float4 position;
+	
+	position = mul(float4(input.position,1.0), worldMatrix);
+	position = mul(position, viewMatrix);
+	position = mul(position, projectionMatrix);
+
+    return position;
+}
+
+float4 ZPrePassPixelShader(float4 position : SV_POSITION) : SV_TARGET
+{
+	return float4(1.0,1.0,1.0,1.0);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // Lighting pass
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -79,7 +100,7 @@ Texture2D diffuseTexture : register(t2);
 
 float4 DeferredLightingPixelShader(LightingPixelInputType input) : SV_TARGET
 {
-	float3 normal = normalTexture.Sample(pointSampler, input.texCoord);
+	float3 normal = normalTexture.Sample(pointSampler, input.texCoord).xyz;
 
     return diffuseTexture.Sample(pointSampler, input.texCoord)*saturate(dot(normal,float3(0,1,0)));
 }

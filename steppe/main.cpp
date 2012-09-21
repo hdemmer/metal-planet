@@ -244,7 +244,10 @@ void RenderFrame(void)
 
 	UpdateDeferred();	// TODO: call this in update not draw
 
+	//SetZPrePassRenderer();
+
 	SetDeferredRenderer();
+	RenderTerrain();
 	RenderTerrain();
 	
 	// now render to back buffer

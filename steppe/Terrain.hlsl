@@ -36,24 +36,27 @@ DeferredVertexInputType TerrainVertexShader(VertexInputType input)
 	float dx=0.0;
 	float dz=0.0;
 
-	//for (float i=0.125;i<1025;i*=2)
-	for (float i=16;i<300;i*=2)
+	for (float i=32;i<1025;i*=1.8)
 	{
 		float u;
 		float v;
 		sincos(i,u,v);
-		h += 0.1*i*(sin((u*output.position.x + v*output.position.z)/i) + cos((v*output.position.x + u*output.position.z)/i));
+		h += 0.01*sqrt(i)*i*(sin((u*output.position.x + v*output.position.z)/i) + cos((v*output.position.x + u*output.position.z)/i));
 		output.position.y += h;
 
-		dx +=0.1*(u*cos((v*output.position.z+u*output.position.x)/i)-v*sin((u*output.position.z+v*output.position.x)/i));
-		dz +=0.1*(v*cos((v*output.position.z+u*output.position.x)/i)-u*sin((u*output.position.z+v*output.position.x)/i));
+		dx +=0.01*sqrt(i)*(u*cos((v*output.position.z+u*output.position.x)/i)-v*sin((u*output.position.z+v*output.position.x)/i));
+		dz +=0.01*sqrt(i)*(v*cos((v*output.position.z+u*output.position.x)/i)-u*sin((u*output.position.z+v*output.position.x)/i));
 	}
 
 	output.position.y += h;
 
 	output.normal = normalize(cross(float3(0.0,dz,0.1),float3(0.1,dx,0.0)));
 
-	output.diffuse=output.position*0.001+float3(0.2,0.2,0.2);
+	float disp = saturate(sin(output.position.y/10));
+
+	output.position += output.normal * 10.0 * disp;
+
+	output.diffuse=float3(0.7,0.7,0.7);
 
     return output;
 }

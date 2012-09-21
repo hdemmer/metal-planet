@@ -98,7 +98,7 @@ XMMATRIX PlayerViewMatrix()
 XMMATRIX PlayerProjectionMatrix()
 {
     // Initialize the projection matrix
-    XMMATRIX Projection = XMMatrixPerspectiveFovLH( XM_PIDIV4, SCREEN_WIDTH / (FLOAT)SCREEN_HEIGHT, 0.1f, WORLD_SIZE );
+    XMMATRIX Projection = XMMatrixPerspectiveFovLH( XM_PIDIV4, SCREEN_WIDTH / (FLOAT)SCREEN_HEIGHT, 0.1f, 2*WORLD_SIZE );
 
 	return Projection;
 }
