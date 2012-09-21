@@ -136,7 +136,7 @@ void UpdateQuadTreeNode(QuadTreeNode * node)
 	//if (abs(gPlayerPosition.x-tileHalfWidth-tileOrigin.x) < tileHalfWidth && abs(gPlayerPosition.z -tileHalfWidth- tileOrigin.y) <tileHalfWidth)
 //		factor = 0.0;
 
-	float factor = distance / tileHalfWidth;
+	float factor = powf(distance,0.9) / tileHalfWidth;
 
 	if (!node->isLeaf)
 	{

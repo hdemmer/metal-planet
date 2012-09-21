@@ -17,13 +17,32 @@ struct VertexInputType
 struct DeferredVertexInputType
 {
     float3 position : POSITION;
-	float3 normal : NORMAL;
-	float3 diffuse : DIFFUSE;
-	float3 specular : SPECULAR;
+	float3 tangentU : TANGENTU;
+	float3 tangentV : TANGENTV;
+	float2 texCoords : TEXCOORDS;
+};
+
+
+struct PixelInputType
+{
+    float4 position : SV_POSITION;
+	float3 tangentU : TANGENTU;
+	float3 tangentV : TANGENTV;
+	float2 texCoords : TEXCOORDS;
+	float3 worldPosition : WORLD_POSITION;
+};
+
+
+struct PixelOutputType
+{
+	float4 worldPosition : SV_TARGET0;
+    float4 normal : SV_TARGET1;
+	float4 diffuse : SV_TARGET2;
+	float4 specular : SV_TARGET3;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// Vertex Shader
+// Terrain Generation Vertex Shader
 ////////////////////////////////////////////////////////////////////////////////
 
 SamplerState linearSampler;
@@ -32,7 +51,7 @@ Texture2D normalTexture : register(t1);
 Texture2D diffuseTexture : register(t2);
 Texture2D specularTexture : register(t3);
 
-DeferredVertexInputType TerrainVertexShader(VertexInputType input)
+DeferredVertexInputType TerrainGenerateVertexShader(VertexInputType input)
 {
     DeferredVertexInputType output;
 	
@@ -61,31 +80,59 @@ DeferredVertexInputType TerrainVertexShader(VertexInputType input)
 	
 	output.position.y += h*0.1;
 
-	float3 tangentX = normalize(float3(1.0,dx,0.0));
-	float3 tangentZ = normalize(float3(0.0,dz,1.0));
+	float3 tangentU = normalize(float3(1.0,dx,0.0));
+	float3 tangentV = normalize(float3(0.0,dz,1.0));
 	
-	output.normal = cross(tangentZ,tangentX);
+	output.tangentU = tangentU;
+	output.tangentV = tangentV;
+
+	float3 normal = cross(tangentV,tangentU);
 
 	// texcoords
 
 	float2 texCoords = output.position.xz / 2000.0;
 
+	output.texCoords = texCoords;
+
 	// texture based displace
 
 	float4 dispSample = bumpTexture.SampleLevel(linearSampler,texCoords,mipLevel);
-	float disp = dispSample.x;
+	float4 dispSample2 = bumpTexture.SampleLevel(linearSampler,texCoords.yx * 10.0,mipLevel);
+	float disp = dispSample.x + dispSample2.x;
 
-	output.position += output.normal * 400.0 * disp;
+	output.position += normal * 100.0 * disp;
 
-	float4 normalSample = normalTexture.SampleLevel(linearSampler,texCoords,mipLevel);
+    return output;
+}
 
-	float normalX = 2.0*normalSample.x - 1.0;
-	float normalY = 2.0*normalSample.y - 1.0;
-	float normalZ = 2.0*normalSample.z - 1.0;
-	output.normal = normalize(normalZ * output.normal + normalX * tangentX + normalY * tangentZ);
 
-	output.diffuse=float3(0.2,0.2,0.2);
-	output.specular=float3(0.7,0.7,0.7);
+
+////////////////////////////////////////////////////////////////////////////////
+// Deferred pass
+////////////////////////////////////////////////////////////////////////////////
+
+
+PixelOutputType TerrainPixelShader(PixelInputType input)
+{
+	PixelOutputType output;
+	output.worldPosition=float4(input.worldPosition,0.0);
+	output.diffuse=float4(0.0,0.0,0.0,0.0);
+	output.specular=float4(0.0,0.0,0.0,0.0);
+
+	// normal mapping
+
+	float3 normal = cross(input.tangentV, input.tangentU);
+	
+	float4 normalSample = normalTexture.Sample(linearSampler,input.texCoords);
+	normalSample += normalTexture.Sample(linearSampler,input.texCoords.yx * 10.0);
+
+	float normalX = normalSample.x - 1.0;
+	float normalY = normalSample.y - 1.0;
+	float normalZ = normalSample.z - 1.0;
+	normal = normalize(normalZ * normal + normalX * input.tangentU + normalY * input.tangentV);
+	
+
+	output.normal=float4(normal,0.0);
 
     return output;
 }

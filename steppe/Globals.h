@@ -22,9 +22,9 @@ extern void OutputShaderErrorMessage(ID3D10Blob* errorMessage);
 struct DeferredVertexType
 {
 	XMFLOAT3 position;
-	XMFLOAT3 normal;
-	XMFLOAT3 diffuse;
-	XMFLOAT3 specular;
+	XMFLOAT3 tangentU;
+	XMFLOAT3 tangentV;
+	XMFLOAT2 texCoords;
 };
 
 extern HWND ghWnd;

@@ -7,7 +7,7 @@
 ID3D11Buffer * terrainVertexBuffer;
 ID3D11Buffer * terrainConstantsBuffer;
 
-ID3D11VertexShader * terrainVertexShader;
+ID3D11VertexShader * terrainGenerateVertexShader;
 ID3D11InputLayout * terrainInputLayout;
 
 ID3D11GeometryShader * terrainDummyGS;
@@ -20,6 +20,8 @@ ID3D11ShaderResourceView* diffuseTexture;
 ID3D11ShaderResourceView* specularTexture;
 
 ID3D11SamplerState* sampleStateLinear;
+
+ID3D11PixelShader * terrainPixelShader;
 
 struct TerrainVertexType
 {
@@ -50,7 +52,7 @@ void GenerateTerrainTile(TerrainTile*tile)
 	devcon->IASetVertexBuffers(0,1,&terrainVertexBuffer,&stride,&offset);
 	devcon->IASetIndexBuffer( terrainIndexBuffer, DXGI_FORMAT_R32_UINT, 0 );
 
-	devcon->VSSetShader(terrainVertexShader, NULL,0);
+	devcon->VSSetShader(terrainGenerateVertexShader, NULL,0);
 	devcon->GSSetShader(terrainDummyGS, NULL, 0);
 
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -130,7 +132,7 @@ void SetupTerrain()
 	ID3D10Blob* errorMessage = NULL;
 	ID3D10Blob* vertexShaderBlob = NULL;
 
-	D3DX11CompileFromFile(L"Terrain.hlsl", NULL, NULL, "TerrainVertexShader", "vs_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, NULL, 
+	D3DX11CompileFromFile(L"Terrain.hlsl", NULL, NULL, "TerrainGenerateVertexShader", "vs_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, NULL, 
 		&vertexShaderBlob, &errorMessage, NULL);
 
 	if (errorMessage)
@@ -138,7 +140,7 @@ void SetupTerrain()
 		OutputShaderErrorMessage(errorMessage);
 	}
 
-	dev->CreateVertexShader(vertexShaderBlob->GetBufferPointer(), vertexShaderBlob->GetBufferSize(), NULL, &terrainVertexShader);
+	dev->CreateVertexShader(vertexShaderBlob->GetBufferPointer(), vertexShaderBlob->GetBufferSize(), NULL, &terrainGenerateVertexShader);
 
 	D3D11_INPUT_ELEMENT_DESC inputLayout[] =
 	{
@@ -156,12 +158,12 @@ void SetupTerrain()
 	D3D11_SO_DECLARATION_ENTRY soDecl[] = 
 	{
 		{ 0, "POSITION", 0, 0, 3, 0 }
-		, { 0, "NORMAL", 0, 0, 3, 0 }
-		, { 0, "DIFFUSE", 0, 0, 3, 0 }
-		, { 0, "SPECULAR", 0, 0, 3, 0 }
+		, { 0, "TANGENTU", 0, 0, 3, 0 }
+		, { 0, "TANGENTV", 0, 0, 3, 0 }
+		, { 0, "TEXCOORDS", 0, 0, 2, 0 }
 	};
 
-	UINT stride[1] = {12 * sizeof(float)}; // *NOT* sizeof the above array!
+	UINT stride[1] = {11 * sizeof(float)}; // *NOT* sizeof the above array!
 	UINT elems = sizeof(soDecl) / sizeof(D3D11_SO_DECLARATION_ENTRY);
 
 	HRESULT res = dev->CreateGeometryShaderWithStreamOutput(vertexShaderBlob->GetBufferPointer(), vertexShaderBlob->GetBufferSize(),soDecl,elems,stride,1,D3D11_SO_NO_RASTERIZED_STREAM,NULL, &terrainDummyGS);
@@ -247,13 +249,30 @@ indicesData.SysMemSlicePitch = 0;
 	//D3DX11CreateShaderResourceViewFromFile(dev, L"textures/am_specular.png", NULL, NULL, &specularTexture, NULL);
 	D3DX11CreateShaderResourceViewFromFile(dev, L"textures/am_bump.png", NULL, NULL, &bumpTexture, NULL);
 	D3DX11CreateShaderResourceViewFromFile(dev, L"textures/am_normal.png", NULL, NULL, &normalTexture, NULL);
+
+	///////////////
+	// setup  pixel shader
+
+	ID3D10Blob * pixelShaderBlob = NULL;
+
+	D3DX11CompileFromFile(L"Terrain.hlsl", NULL, NULL, "TerrainPixelShader", "ps_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, NULL, 
+		&pixelShaderBlob, &errorMessage, NULL);
+
+	if (errorMessage)
+	{
+		OutputShaderErrorMessage(errorMessage);
+	}
+
+	dev->CreatePixelShader(pixelShaderBlob->GetBufferPointer(), pixelShaderBlob->GetBufferSize(), NULL, &terrainPixelShader);
+
+	pixelShaderBlob->Release();
 }
 
 
 void TearDownTerrain()
 {
 	terrainVertexBuffer->Release();
-	terrainVertexShader->Release();
+	terrainGenerateVertexShader->Release();
 	terrainInputLayout->Release();
 
 	terrainDummyGS->Release();
@@ -264,6 +283,8 @@ void TearDownTerrain()
 	//specularTexture->Release();
 	bumpTexture->Release();
 	normalTexture->Release();
+
+	terrainPixelShader->Release();
 }
 
 
@@ -283,6 +304,12 @@ void RenderTerrain()
 {
 	
 	devcon->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	devcon->PSSetShader(terrainPixelShader,NULL,0);
+
+	devcon->PSSetSamplers(0,1,&sampleStateLinear);
+	ID3D11ShaderResourceView *textures[3]={bumpTexture,normalTexture,diffuseTexture};
+	devcon->PSSetShaderResources(0, 3, textures);
+
 
 	TerrainTile ** allTiles = NULL;
 	UINT numTiles = 0;

@@ -50,8 +50,9 @@ void PlayerUpdate()
 	desiredDir = XMVector4Normalize(desiredDir);
 
 	XMMATRIX RotateHoriz = XMMatrixRotationY( -1* gPlayerYaw );
+	XMMATRIX RotateVert = XMMatrixRotationX( -1 * gPlayerPitch );
 
-	desiredDir = XMVector4Transform(desiredDir,RotateHoriz);
+	desiredDir = XMVector4Transform(desiredDir,RotateVert*RotateHoriz);
 
 	XMVECTOR candidateVec = XMLoadFloat3(&gPlayerPosition) + desiredDir*WORLD_SIZE*0.001f;//TODO: speed
 

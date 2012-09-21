@@ -11,23 +11,21 @@ cbuffer deferredConstantsBuffer
 struct VertexInputType
 {
     float3 position : POSITION;
-	float3 normal : NORMAL;
-	float3 diffuse : DIFFUSE;
-	float3 specular : SPECULAR;	// spec exponent, spec occlusion, ???
+	float3 tangentU : TANGENTU;
+	float3 tangentV : TANGENTV;
+	float2 texCoords : TEXCOORDS;
 };
 
-////////////////////////////////////////////////////////////////////////////////
-// Deferred pass
-////////////////////////////////////////////////////////////////////////////////
 
 struct PixelInputType
 {
     float4 position : SV_POSITION;
-	float3 normal : NORMAL;
-	float3 diffuse : DIFFUSE;
-	float3 specular : SPECULAR;
+	float3 tangentU : TANGENTU;
+	float3 tangentV : TANGENTV;
+	float2 texCoords : TEXCOORDS;
 	float3 worldPosition : WORLD_POSITION;
 };
+
 
 struct PixelOutputType
 {
@@ -37,54 +35,34 @@ struct PixelOutputType
 	float4 specular : SV_TARGET3;
 };
 
+////////////////////////////////////////////////////////////////////////////////
+// Deferred pass
+////////////////////////////////////////////////////////////////////////////////
+
+
 PixelInputType DeferredVertexShader(VertexInputType input)
 {
     PixelInputType output;
 
 	output.worldPosition = input.position;
-    
 	output.position = mul(float4(input.position,1.0), worldViewProjectionMatrix);
-	//output.position = mul(output.position, viewMatrix);
-	//output.position = mul(output.position, projectionMatrix);
 
-	//float4 transformedNormal = mul(float4(input.normal,1.0), viewMatrix);
-
-	output.normal = input.normal;
-	output.diffuse = input.diffuse;
-	output.specular = input.specular;
+	output.tangentU = input.tangentU;
+	output.tangentV = input.tangentV;
+	output.texCoords = input.texCoords;
 
     return output;
 }
+
 
 PixelOutputType DeferredPixelShader(PixelInputType input)
 {
 	PixelOutputType output;
-	output.diffuse=float4(input.diffuse,1.0);
-	output.specular=float4(input.specular,1.0);
-	output.normal=float4(input.normal,1.0);
+	output.diffuse=float4(0.0,0.0,0.0,0.0);
+	output.specular=float4(0.0,0.0,0.0,0.0);
+	output.normal=float4(cross(input.tangentU,input.tangentV),0.0);
 	output.worldPosition=float4(input.worldPosition,0.0);
     return output;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// Z-Prepass pass
-////////////////////////////////////////////////////////////////////////////////
-
-
-float4 ZPrePassVertexShader(VertexInputType input) : SV_POSITION
-{
-    float4 position;
-	
-	position = mul(float4(input.position,1.0), worldViewProjectionMatrix);
-	//position = mul(position, viewMatrix);
-	//position = mul(position, projectionMatrix);
-
-    return position;
-}
-
-float4 ZPrePassPixelShader(float4 position : SV_POSITION) : SV_TARGET
-{
-	return float4(1.0,1.0,1.0,1.0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -106,7 +84,7 @@ Texture2D specularTexture  : register(t3);
 
 float4 DeferredLightingPixelShader(LightingPixelInputType input) : SV_TARGET
 {
-	float3 lightPosition = float3(5000,10000,5000);
+	float3 lightPosition = float3(5000,100000,5000);
 
 	float4 worldPositionSample = worldPositionTexture.Sample(pointSampler, input.texCoord);
 
@@ -116,9 +94,15 @@ float4 DeferredLightingPixelShader(LightingPixelInputType input) : SV_TARGET
 
 // calculate blinn-phong
 
-	float3 blinnHalf = normalize( playerEyePosition.xyz-worldPosition+lightPosition-worldPosition );
+	float3 blinnHalf = normalize( normalize(playerEyePosition.xyz-worldPosition)+normalize(lightPosition-worldPosition ));
 	float diffuseIntensity = saturate( dot(normal,normalize(lightPosition-worldPosition)));
-	float specularIntensity = pow( saturate(dot(normal,blinnHalf)), 50 );
+	float specularBase =  saturate(dot(normal,blinnHalf));
+
+	float specularIntensity = 0.0;
+	for (float i = 2; i<100; i*=2)
+	{
+		specularIntensity +=(i/100)*pow(specularBase, i);
+	}
 
 	float4 result =diffuseTexture.Sample(pointSampler, input.texCoord)*diffuseIntensity + float4(1.0,1.0,1.0,1.0) * specularIntensity;
 

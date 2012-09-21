@@ -18,9 +18,6 @@ ID3D11InputLayout * deferredInputLayout;
 ID3D11PixelShader * deferredPixelShader;
 ID3D11RasterizerState * deferredRasterizerState;
 
-ID3D11VertexShader * zPrePassVertexShader;
-ID3D11PixelShader * zPrePassPixelShader;
-
 // deferred lighting stage
 
 ID3D11PixelShader * deferredLightingPixelShader;
@@ -56,11 +53,11 @@ void SetupDeferred()
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, 
 		D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, 
+		{ "TANGENTU", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, 
 		D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "DIFFUSE", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 24, 
+		{ "TANGENTV", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 24, 
 		D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "SPECULAR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 36, 
+		{ "TEXCOORDS", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 36, 
 		D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	};
 
@@ -246,36 +243,6 @@ void SetupDeferred()
 	// Create the rasterizer state from the description we just filled out.
 	dev->CreateRasterizerState(&rasterDesc, &deferredRasterizerState);
 
-
-	////////////////////
-	// Z-PrePass
-
-
-	vertexShaderBlob = NULL;
-
-	D3DX11CompileFromFile(L"Deferred.hlsl", NULL, NULL, "ZPrePassVertexShader", "vs_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, NULL, 
-		&vertexShaderBlob, &errorMessage, NULL);
-
-	if (errorMessage)
-	{
-		OutputShaderErrorMessage(errorMessage);
-	}
-
-	dev->CreateVertexShader(vertexShaderBlob->GetBufferPointer(), vertexShaderBlob->GetBufferSize(), NULL, &zPrePassVertexShader);
-
-	pixelShaderBlob = NULL;
-
-	D3DX11CompileFromFile(L"Deferred.hlsl", NULL, NULL, "ZPrePassPixelShader", "ps_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, NULL, 
-		&pixelShaderBlob, &errorMessage, NULL);
-
-	if (errorMessage)
-	{
-		OutputShaderErrorMessage(errorMessage);
-	}
-
-	dev->CreatePixelShader(pixelShaderBlob->GetBufferPointer(), pixelShaderBlob->GetBufferSize(), NULL, &zPrePassPixelShader);
-
-	pixelShaderBlob->Release();
 }
 
 
@@ -332,43 +299,6 @@ void UpdateDeferred()
 
 	// Unlock the constant buffer.
 	devcon->Unmap(deferredConstantsBuffer, 0);
-}
-
-void SetZPrePassRenderer()
-{
-	D3D11_VIEWPORT viewport;
-	ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
-
-	viewport.TopLeftX = 0;
-	viewport.TopLeftY = 0;
-	viewport.Width = SCREEN_WIDTH;
-	viewport.Height = SCREEN_HEIGHT;
-	viewport.MinDepth=0.0;
-	viewport.MaxDepth=1.0;
-
-	// Bind the render target view and depth stencil buffer to the output render pipeline.
-	devcon->OMSetRenderTargets(NUM_MRTS, renderTargetView, depthStencilView);
-	// Bind depth stencil state
-	devcon->OMSetDepthStencilState(depthStencilState, 1);
-
-	devcon->RSSetViewports(1, &viewport);
-
-	for (int i=0; i<NUM_MRTS; i++)
-	{
-		devcon->ClearRenderTargetView(renderTargetView[i], D3DXCOLOR(0.0f, 0.0f, 0.0f, 1.0f));
-	}
-	devcon->ClearDepthStencilView(depthStencilView, D3D11_CLEAR_DEPTH|D3D11_CLEAR_STENCIL, 1.0f, 0);
-
-	/// setup shaders
-	devcon->IASetInputLayout(deferredInputLayout);
-
-	devcon->VSSetShader(zPrePassVertexShader,NULL,0);
-	devcon->GSSetShader(NULL, NULL, 0);
-	devcon->PSSetShader(zPrePassPixelShader,NULL,0);
-
-	devcon->VSSetConstantBuffers(0, 1, &deferredConstantsBuffer);
-
-	devcon->RSSetState(deferredRasterizerState);
 }
 
 void SetDeferredRenderer()
