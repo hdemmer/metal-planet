@@ -13,3 +13,4 @@ XMMATRIX PlayerWorldMatrix();
 XMMATRIX PlayerViewMatrix();
 XMMATRIX PlayerProjectionMatrix();
 
+XMVECTOR PlayerEyePosition();

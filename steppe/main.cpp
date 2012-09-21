@@ -237,6 +237,8 @@ void RenderFrame(void)
 	viewport.TopLeftY = 0;
 	viewport.Width = SCREEN_WIDTH;
 	viewport.Height = SCREEN_HEIGHT;
+	viewport.MinDepth=0.0f;
+	viewport.MaxDepth=1.0f;
 
 	PlayerUpdate();
 

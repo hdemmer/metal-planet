@@ -29,9 +29,10 @@ ID3D11SamplerState* sampleStatePoint;
 
 struct MatrixBufferType
 {
-	XMMATRIX world;
-	XMMATRIX view;
-	XMMATRIX projection;
+	XMMATRIX worldMatrix;
+	XMMATRIX viewMatrix;
+	XMMATRIX projectionMatrix;
+	XMFLOAT4 playerEyePosition;
 };
 
 
@@ -319,9 +320,13 @@ void UpdateDeferred()
 	dataPtr = (MatrixBufferType*)mappedResource.pData;
 
 	// Copy the matrices into the constant buffer.
-	dataPtr->world = XMMatrixTranspose(PlayerWorldMatrix());
-	dataPtr->view = XMMatrixTranspose(PlayerViewMatrix());
-	dataPtr->projection = XMMatrixTranspose(PlayerProjectionMatrix());
+	dataPtr->worldMatrix = XMMatrixTranspose(PlayerWorldMatrix());
+	dataPtr->viewMatrix = XMMatrixTranspose(PlayerViewMatrix());
+	dataPtr->projectionMatrix = XMMatrixTranspose(PlayerProjectionMatrix());
+	XMFLOAT4 playerEyePosition;
+	XMStoreFloat4(&playerEyePosition,PlayerEyePosition());
+	playerEyePosition.w = 0.0;
+	dataPtr->playerEyePosition = playerEyePosition;
 
 	// Unlock the constant buffer.
 	devcon->Unmap(deferredConstantsBuffer, 0);
@@ -408,7 +413,7 @@ void RenderDeferredLighting()
 	ID3D11SamplerState * samplerStates[4] = {sampleStatePoint};
 
 	devcon->PSSetShader(deferredLightingPixelShader,NULL,0);
-
+	devcon->PSSetConstantBuffers(0, 1, &deferredConstantsBuffer);
 	devcon->PSSetShaderResources(0, NUM_MRTS, renderTargetResourceView);
 
 	devcon->PSSetSamplers(0, NUM_MRTS, samplerStates);

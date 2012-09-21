@@ -210,6 +210,7 @@ void TerrainTileManagerUpdate()
 
 	UpdateQuadTreeNode(gTerrainTileManager->rootNode);
 
+	printf("%d \n", gTerrainTileManager->idleTiles->size());
 }
 
 void TerrainTileManagerTearDown()
