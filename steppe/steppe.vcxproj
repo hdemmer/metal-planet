@@ -93,6 +93,14 @@
     <None Include="Deferred.hlsl" />
     <None Include="FullScreenQuad.hlsl" />
     <None Include="Terrain.hlsl" />
+    <None Include="textures\am2_bump.tga" />
+    <None Include="textures\am2_diffuse.tga" />
+    <None Include="textures\am2_normal.tga" />
+    <None Include="textures\am2_ro.tga" />
+    <None Include="textures\am_bump.tga" />
+    <None Include="textures\am_diffuse.tga" />
+    <None Include="textures\am_normal.tga" />
+    <None Include="textures\am_ro.tga" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

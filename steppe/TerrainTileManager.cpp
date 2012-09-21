@@ -3,7 +3,7 @@
 #include "TerrainTileManager.h"
 
 #define MAX_TILES 1000
-#define MAX_TREE_DEPTH 12
+#define MAX_TREE_DEPTH 8
 
 struct QuadTreeNode
 {
@@ -210,7 +210,7 @@ void TerrainTileManagerUpdate()
 
 	UpdateQuadTreeNode(gTerrainTileManager->rootNode);
 
-	//printf("%d \n", gTerrainTileManager->idleTiles->size());
+	printf("%d \n", gTerrainTileManager->idleTiles->size());
 }
 
 void TerrainTileManagerTearDown()

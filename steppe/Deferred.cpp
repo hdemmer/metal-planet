@@ -29,9 +29,9 @@ ID3D11SamplerState* sampleStatePoint;
 
 struct MatrixBufferType
 {
-	XMMATRIX worldMatrix;
-	XMMATRIX viewMatrix;
-	XMMATRIX projectionMatrix;
+	XMMATRIX worldViewProjectionMatrix;
+//	XMMATRIX viewMatrix;
+//	XMMATRIX projectionMatrix;
 	XMFLOAT4 playerEyePosition;
 };
 
@@ -196,7 +196,7 @@ void SetupDeferred()
 	descDepth.Height = textureHeight;
 	descDepth.MipLevels = 1;
 	descDepth.ArraySize = 1;
-	descDepth.Format = DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
+	descDepth.Format = DXGI_FORMAT_D32_FLOAT;
 	descDepth.SampleDesc.Count = 1;
 	descDepth.SampleDesc.Quality = 0;
 	descDepth.Usage = D3D11_USAGE_DEFAULT;
@@ -207,7 +207,7 @@ void SetupDeferred()
 
 	D3D11_DEPTH_STENCIL_VIEW_DESC descDSV;
 	ZeroMemory(&descDSV, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
-	descDSV.Format = DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
+	descDSV.Format = descDepth.Format;
 	descDSV.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 	descDSV.Texture2D.MipSlice = 0;
 
@@ -322,9 +322,9 @@ void UpdateDeferred()
 	dataPtr = (MatrixBufferType*)mappedResource.pData;
 
 	// Copy the matrices into the constant buffer.
-	dataPtr->worldMatrix = XMMatrixTranspose(PlayerWorldMatrix());
-	dataPtr->viewMatrix = XMMatrixTranspose(PlayerViewMatrix());
-	dataPtr->projectionMatrix = XMMatrixTranspose(PlayerProjectionMatrix());
+	//dataPtr->worldMatrix = XMMatrixTranspose(PlayerWorldMatrix());
+	//dataPtr->viewMatrix = XMMatrixTranspose(PlayerViewMatrix());
+	dataPtr->worldViewProjectionMatrix = XMMatrixTranspose(PlayerWorldMatrix()*PlayerViewMatrix()*PlayerProjectionMatrix());
 	XMFLOAT4 playerEyePosition;
 	XMStoreFloat4(&playerEyePosition,PlayerEyePosition());
 	playerEyePosition.w = 0.0;

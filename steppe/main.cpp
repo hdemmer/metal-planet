@@ -199,7 +199,7 @@ void InitD3D()
 	D3D11CreateDeviceAndSwapChain(NULL,
 		D3D_DRIVER_TYPE_HARDWARE,
 		NULL,
-		D3D11_CREATE_DEVICE_DEBUG,
+		D3D11_CREATE_DEVICE_DEBUG | D3D11_RLDO_DETAIL,
 		NULL,
 		NULL,
 		D3D11_SDK_VERSION,
@@ -247,9 +247,9 @@ void RenderFrame(void)
 	UpdateDeferred();	// TODO: call this in update not draw
 
 	//SetZPrePassRenderer();
+	//RenderTerrain();
 
 	SetDeferredRenderer();
-	RenderTerrain();
 	RenderTerrain();
 	
 	// now render to back buffer

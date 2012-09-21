@@ -1,9 +1,7 @@
 
 cbuffer deferredConstantsBuffer
 {
-	matrix worldMatrix;
-	matrix viewMatrix;
-	matrix projectionMatrix;
+	matrix worldViewProjectionMatrix;
 	float4 playerEyePosition;
 };
 
@@ -45,9 +43,9 @@ PixelInputType DeferredVertexShader(VertexInputType input)
 
 	output.worldPosition = input.position;
     
-	output.position = mul(float4(input.position,1.0), worldMatrix);
-	output.position = mul(output.position, viewMatrix);
-	output.position = mul(output.position, projectionMatrix);
+	output.position = mul(float4(input.position,1.0), worldViewProjectionMatrix);
+	//output.position = mul(output.position, viewMatrix);
+	//output.position = mul(output.position, projectionMatrix);
 
 	//float4 transformedNormal = mul(float4(input.normal,1.0), viewMatrix);
 
@@ -77,9 +75,9 @@ float4 ZPrePassVertexShader(VertexInputType input) : SV_POSITION
 {
     float4 position;
 	
-	position = mul(float4(input.position,1.0), worldMatrix);
-	position = mul(position, viewMatrix);
-	position = mul(position, projectionMatrix);
+	position = mul(float4(input.position,1.0), worldViewProjectionMatrix);
+	//position = mul(position, viewMatrix);
+	//position = mul(position, projectionMatrix);
 
     return position;
 }
@@ -108,7 +106,7 @@ Texture2D specularTexture  : register(t3);
 
 float4 DeferredLightingPixelShader(LightingPixelInputType input) : SV_TARGET
 {
-	float3 lightPosition = float3(3000,200,3000);
+	float3 lightPosition = float3(5000,10000,5000);
 
 	float4 worldPositionSample = worldPositionTexture.Sample(pointSampler, input.texCoord);
 
@@ -120,9 +118,9 @@ float4 DeferredLightingPixelShader(LightingPixelInputType input) : SV_TARGET
 
 	float3 blinnHalf = normalize( playerEyePosition.xyz-worldPosition+lightPosition-worldPosition );
 	float diffuseIntensity = saturate( dot(normal,normalize(lightPosition-worldPosition)));
-	float specularIntensity = pow( saturate(dot(normal,blinnHalf)), 40 );
+	float specularIntensity = pow( saturate(dot(normal,blinnHalf)), 50 );
 
-	float4 result = diffuseTexture.Sample(pointSampler, input.texCoord)*diffuseIntensity + float4(1.0,1.0,1.0,1.0) * specularIntensity;
+	float4 result =diffuseTexture.Sample(pointSampler, input.texCoord)*diffuseIntensity + float4(1.0,1.0,1.0,1.0) * specularIntensity;
 
     return result;
 }

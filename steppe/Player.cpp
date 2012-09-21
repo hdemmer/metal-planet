@@ -53,7 +53,7 @@ void PlayerUpdate()
 
 	desiredDir = XMVector4Transform(desiredDir,RotateHoriz);
 
-	XMVECTOR candidateVec = XMLoadFloat3(&gPlayerPosition) + desiredDir*WORLD_SIZE*0.001;//TODO: speed
+	XMVECTOR candidateVec = XMLoadFloat3(&gPlayerPosition) + desiredDir*WORLD_SIZE*0.001f;//TODO: speed
 
 	XMStoreFloat3(&gPlayerPosition,candidateVec);
 	
@@ -103,7 +103,7 @@ XMMATRIX PlayerViewMatrix()
 XMMATRIX PlayerProjectionMatrix()
 {
     // Initialize the projection matrix
-    XMMATRIX Projection = XMMatrixPerspectiveFovLH( XM_PIDIV4, SCREEN_WIDTH / (FLOAT)SCREEN_HEIGHT, 0.1f, 2*WORLD_SIZE );
+    XMMATRIX Projection = XMMatrixPerspectiveFovLH( XM_PIDIV4, SCREEN_WIDTH / (FLOAT)SCREEN_HEIGHT, 10.0f, 2*WORLD_SIZE );
 
 	return Projection;
 }

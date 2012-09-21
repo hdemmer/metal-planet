@@ -14,6 +14,13 @@ ID3D11GeometryShader * terrainDummyGS;
 
 ID3D11Buffer * terrainIndexBuffer;
 
+ID3D11ShaderResourceView* bumpTexture;
+ID3D11ShaderResourceView* normalTexture;
+ID3D11ShaderResourceView* diffuseTexture;
+ID3D11ShaderResourceView* specularTexture;
+
+ID3D11SamplerState* sampleStateLinear;
+
 struct TerrainVertexType
 {
 	XMFLOAT3 position;
@@ -22,7 +29,7 @@ struct TerrainVertexType
 struct TerrainConstantsBufferType
 {
 	XMFLOAT2 origin;
-	float scale;
+	UINT octave;
 	float padding;
 };
 
@@ -51,9 +58,13 @@ void GenerateTerrainTile(TerrainTile*tile)
 	devcon->Map(terrainConstantsBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	dataPtr = (TerrainConstantsBufferType*)mappedResource.pData;
 	dataPtr->origin = tile->origin;
-	dataPtr->scale = 1.0f / (float)(1 << tile->depth);
+	dataPtr->octave = tile->depth;
 	devcon->Unmap(terrainConstantsBuffer, 0);
 	devcon->VSSetConstantBuffers(0, 1, &terrainConstantsBuffer);
+
+	devcon->VSSetSamplers(0,1,&sampleStateLinear);
+	ID3D11ShaderResourceView *textures[3]={bumpTexture,normalTexture,diffuseTexture};
+	devcon->VSSetShaderResources(0, 3, textures);
 
 	devcon->SOSetTargets(1,&tile->vertexBuffer,&offset);
 
@@ -92,10 +103,11 @@ void SetupTerrain()
 			if (j >= GRID_SIZE - OVERLAP_WIDTH)
 				overlap+=j-GRID_SIZE + OVERLAP_WIDTH;
 
-			overlap /= -2*OVERLAP_WIDTH;
+			if (OVERLAP_WIDTH != 0)
+				overlap /= -2*OVERLAP_WIDTH;
 
 			int baseIndex = (i+j*(GRID_SIZE+1));
-			vertices[baseIndex].position=XMFLOAT3(scale*(i-OVERLAP_WIDTH),scale*(j-OVERLAP_WIDTH),overlap);
+			vertices[baseIndex].position=XMFLOAT3(scale*(i-OVERLAP_WIDTH),scale*(j-OVERLAP_WIDTH),overlap*1000);
 		}
 	}
 
@@ -209,6 +221,32 @@ indicesData.SysMemSlicePitch = 0;
 	dev->CreateBuffer( &bufferDesc, &indicesData, &terrainIndexBuffer );
 
 	free(indices);
+
+	// setup textures
+
+	// Create a texture sampler state description.
+	D3D11_SAMPLER_DESC samplerDesc;
+	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.MipLODBias = 0.0f;
+	samplerDesc.MaxAnisotropy = 1;
+	samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+	samplerDesc.BorderColor[0] = 0;
+	samplerDesc.BorderColor[1] = 0;
+	samplerDesc.BorderColor[2] = 0;
+	samplerDesc.BorderColor[3] = 0;
+	samplerDesc.MinLOD = 0;
+	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+	// Create the texture sampler state.
+	dev->CreateSamplerState(&samplerDesc, &sampleStateLinear);
+
+ 	res =  D3DX11CreateShaderResourceViewFromFile(dev, L"textures/am_diffuse.png", NULL, NULL, &diffuseTexture, NULL);
+	//D3DX11CreateShaderResourceViewFromFile(dev, L"textures/am_specular.png", NULL, NULL, &specularTexture, NULL);
+	D3DX11CreateShaderResourceViewFromFile(dev, L"textures/am_bump.png", NULL, NULL, &bumpTexture, NULL);
+	D3DX11CreateShaderResourceViewFromFile(dev, L"textures/am_normal.png", NULL, NULL, &normalTexture, NULL);
 }
 
 
@@ -221,6 +259,11 @@ void TearDownTerrain()
 	terrainDummyGS->Release();
 
 	terrainConstantsBuffer->Release();
+
+	diffuseTexture->Release();
+	//specularTexture->Release();
+	bumpTexture->Release();
+	normalTexture->Release();
 }
 
 
