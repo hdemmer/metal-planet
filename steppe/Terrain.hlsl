@@ -104,7 +104,7 @@ DeferredVertexInputType TerrainGenerateVertexShader(VertexInputType input)
 		disp += 400.0 * (1.0 / i2) * bumpTexture.SampleLevel(linearSampler,texCoords * i2,mipLevel).x;
 	}
 
-	disp -= 2.0 * length(glowTexture.SampleLevel(linearSampler,texCoords * 64,mipLevel).xyz);
+//	disp -= 2.0 * length(glowTexture.SampleLevel(linearSampler,texCoords * 64,mipLevel).xyz);
 
 	output.position+= normal * disp;
 
