@@ -65,8 +65,8 @@ void GenerateTerrainTile(TerrainTile*tile)
 	devcon->VSSetConstantBuffers(0, 1, &terrainConstantsBuffer);
 
 	devcon->VSSetSamplers(0,1,&sampleStateLinear);
-	ID3D11ShaderResourceView *textures[3]={bumpTexture,normalTexture,diffuseTexture};
-	devcon->VSSetShaderResources(0, 3, textures);
+	ID3D11ShaderResourceView *textures[4]={bumpTexture,normalTexture,diffuseTexture,specularTexture};
+	devcon->VSSetShaderResources(0, 4, textures);
 
 	devcon->SOSetTargets(1,&tile->vertexBuffer,&offset);
 
@@ -245,8 +245,8 @@ indicesData.SysMemSlicePitch = 0;
 	// Create the texture sampler state.
 	dev->CreateSamplerState(&samplerDesc, &sampleStateLinear);
 
- 	res =  D3DX11CreateShaderResourceViewFromFile(dev, L"textures/am_diffuse.png", NULL, NULL, &diffuseTexture, NULL);
-	//D3DX11CreateShaderResourceViewFromFile(dev, L"textures/am_specular.png", NULL, NULL, &specularTexture, NULL);
+ 	D3DX11CreateShaderResourceViewFromFile(dev, L"textures/am_diffuse.png", NULL, NULL, &diffuseTexture, NULL);
+	D3DX11CreateShaderResourceViewFromFile(dev, L"textures/am_specular.png", NULL, NULL, &specularTexture, NULL);
 	D3DX11CreateShaderResourceViewFromFile(dev, L"textures/am_bump.png", NULL, NULL, &bumpTexture, NULL);
 	D3DX11CreateShaderResourceViewFromFile(dev, L"textures/am_normal.png", NULL, NULL, &normalTexture, NULL);
 
@@ -280,7 +280,7 @@ void TearDownTerrain()
 	terrainConstantsBuffer->Release();
 
 	diffuseTexture->Release();
-	//specularTexture->Release();
+	specularTexture->Release();
 	bumpTexture->Release();
 	normalTexture->Release();
 
@@ -307,8 +307,8 @@ void RenderTerrain()
 	devcon->PSSetShader(terrainPixelShader,NULL,0);
 
 	devcon->PSSetSamplers(0,1,&sampleStateLinear);
-	ID3D11ShaderResourceView *textures[3]={bumpTexture,normalTexture,diffuseTexture};
-	devcon->PSSetShaderResources(0, 3, textures);
+	ID3D11ShaderResourceView *textures[4]={bumpTexture,normalTexture,diffuseTexture,specularTexture};
+	devcon->PSSetShaderResources(0, 4, textures);
 
 
 	TerrainTile ** allTiles = NULL;

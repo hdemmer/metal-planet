@@ -96,15 +96,13 @@ DeferredVertexInputType TerrainGenerateVertexShader(VertexInputType input)
 
 	// texture based displace
 
-
-
 	float disp = 0.0;
-	for (float i=1;i<17;i*=4)
+	for (float i2=1;i2<17;i2*=4)
 	{
-		disp += 400.0 * (1.0 / i) * bumpTexture.SampleLevel(linearSampler,texCoords * i,mipLevel).x;
+		disp += 400.0 * (1.0 / i2) * bumpTexture.SampleLevel(linearSampler,texCoords * i2,mipLevel).x;
 	}
 
-	output.position += normal * disp;
+	output.position+= normal * disp;
 
     return output;
 }
@@ -127,14 +125,17 @@ PixelOutputType TerrainPixelShader(PixelInputType input)
 	float3 normal = cross(input.tangentV, input.tangentU);
 	
 	float4 normalSample;
+	float specular=1.0;
 	float sum;
 	
 	for (float i=1;i<65;i*=4)
 	{
 		sum +=1;
 		normalSample += normalTexture.Sample(linearSampler,input.texCoords * i);
+		specular *= specularTexture.Sample(linearSampler,input.texCoords * i).x;
 	}
 	normalSample /= sum;
+	//specular /= sum;
 
 	float normalX = 2.0 * normalSample.x - 1.0;
 	float normalY = 2.0 * normalSample.y - 1.0;
@@ -145,13 +146,13 @@ PixelOutputType TerrainPixelShader(PixelInputType input)
 
 	float disp = 0.0;
 	float sum2;
-	for (float i=1;i<17;i*=4)
+	for (float i2=1;i2<17;i2*=4)
 	{
-		sum2+= (1.0/i);
-		disp += (1.0 / i) * bumpTexture.Sample(linearSampler,input.texCoords * i).x;
+		sum2+= (1.0/i2);
+		disp += (1.0 / i2) * bumpTexture.Sample(linearSampler,input.texCoords * i2).x;
 	}
 
-	output.specular=float4(10.0+20.0*disp,1.0,0.0,0.0);
+	output.specular=float4(10.0+20.0*disp,specular,0.0,0.0);
 
     return output;
 }

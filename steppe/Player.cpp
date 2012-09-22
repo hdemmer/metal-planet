@@ -50,13 +50,32 @@ void PlayerUpdate()
 	desiredDir = XMVector4Normalize(desiredDir);
 
 	XMMATRIX RotateHoriz = XMMatrixRotationY( -1* gPlayerYaw );
-	XMMATRIX RotateVert = XMMatrixRotationX( -1 * gPlayerPitch );
+	//XMMATRIX RotateVert = XMMatrixRotationX( -1 * gPlayerPitch );
 
-	desiredDir = XMVector4Transform(desiredDir,RotateVert*RotateHoriz);
+	desiredDir = XMVector4Transform(desiredDir,RotateHoriz);
 
 	XMVECTOR candidateVec = XMLoadFloat3(&gPlayerPosition) + desiredDir*WORLD_SIZE*0.001f;//TODO: speed
-
+	
 	XMStoreFloat3(&gPlayerPosition,candidateVec);
+
+	//////
+	
+	// sinus waves
+
+	float h=0.0;
+	float dx=0.0;
+	float dz=0.0;
+	
+	for (float i=64;i<257;i*=1.8f)
+	{
+		float u=sin(i);
+		float v=cos(i);
+		h += 0.01f*sqrt(i)*i*(sin((u*gPlayerPosition.x + v*gPlayerPosition.z)/i) + cos((v*gPlayerPosition.x + u*gPlayerPosition.z)/i));
+	}
+
+	gPlayerPosition.y=h*1.5f+500.0f;
+
+	//////
 	
 	gPlayerYaw -= (float)mousestate.lX*0.001f;
 	gPlayerPitch -= (float)mousestate.lY*0.001f;

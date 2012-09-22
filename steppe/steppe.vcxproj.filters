@@ -55,37 +55,13 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="FullScreenQuad.hlsl">
-      <Filter>Resource Files</Filter>
-    </None>
     <None Include="Terrain.hlsl">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="Deferred.hlsl">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="textures\am_bump.tga">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="textures\am_diffuse.tga">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="textures\am_normal.tga">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="textures\am_ro.tga">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="textures\am2_bump.tga">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="textures\am2_diffuse.tga">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="textures\am2_normal.tga">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="textures\am2_ro.tga">
+    <None Include="FullScreenQuad.hlsl">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>
