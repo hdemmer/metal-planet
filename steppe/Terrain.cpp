@@ -18,6 +18,7 @@ ID3D11ShaderResourceView* bumpTexture;
 ID3D11ShaderResourceView* normalTexture;
 ID3D11ShaderResourceView* diffuseTexture;
 ID3D11ShaderResourceView* specularTexture;
+ID3D11ShaderResourceView* glowTexture;
 
 ID3D11SamplerState* sampleStateLinear;
 
@@ -65,8 +66,8 @@ void GenerateTerrainTile(TerrainTile*tile)
 	devcon->VSSetConstantBuffers(0, 1, &terrainConstantsBuffer);
 
 	devcon->VSSetSamplers(0,1,&sampleStateLinear);
-	ID3D11ShaderResourceView *textures[4]={bumpTexture,normalTexture,diffuseTexture,specularTexture};
-	devcon->VSSetShaderResources(0, 4, textures);
+	ID3D11ShaderResourceView *textures[5]={bumpTexture,normalTexture,diffuseTexture,specularTexture, glowTexture};
+	devcon->VSSetShaderResources(0, 5, textures);
 
 	devcon->SOSetTargets(1,&tile->vertexBuffer,&offset);
 
@@ -249,6 +250,7 @@ indicesData.SysMemSlicePitch = 0;
 	D3DX11CreateShaderResourceViewFromFile(dev, L"textures/am_specular.png", NULL, NULL, &specularTexture, NULL);
 	D3DX11CreateShaderResourceViewFromFile(dev, L"textures/am_bump.png", NULL, NULL, &bumpTexture, NULL);
 	D3DX11CreateShaderResourceViewFromFile(dev, L"textures/am_normal.png", NULL, NULL, &normalTexture, NULL);
+	D3DX11CreateShaderResourceViewFromFile(dev, L"textures/am_glow.png", NULL, NULL, &glowTexture, NULL);
 
 	///////////////
 	// setup  pixel shader
@@ -283,6 +285,7 @@ void TearDownTerrain()
 	specularTexture->Release();
 	bumpTexture->Release();
 	normalTexture->Release();
+	glowTexture->Release();
 
 	terrainPixelShader->Release();
 }
@@ -307,8 +310,8 @@ void RenderTerrain()
 	devcon->PSSetShader(terrainPixelShader,NULL,0);
 
 	devcon->PSSetSamplers(0,1,&sampleStateLinear);
-	ID3D11ShaderResourceView *textures[4]={bumpTexture,normalTexture,diffuseTexture,specularTexture};
-	devcon->PSSetShaderResources(0, 4, textures);
+	ID3D11ShaderResourceView *textures[5]={bumpTexture,normalTexture,diffuseTexture,specularTexture, glowTexture};
+	devcon->PSSetShaderResources(0, 5, textures);
 
 
 	TerrainTile ** allTiles = NULL;

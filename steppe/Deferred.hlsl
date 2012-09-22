@@ -33,6 +33,7 @@ struct PixelOutputType
     float4 normal : SV_TARGET1;
 	float4 diffuse : SV_TARGET2;
 	float4 specular : SV_TARGET3;	// spec exp, spec occ
+	float4 glow : SV_TARGET4;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -60,6 +61,7 @@ PixelOutputType DeferredPixelShader(PixelInputType input)
 	PixelOutputType output;
 	output.diffuse=float4(0.0,0.0,0.0,0.0);
 	output.specular=float4(0.0,0.0,0.0,0.0);
+	output.glow=float4(0.0,0.0,0.0,0.0);
 	output.normal=float4(cross(input.tangentU,input.tangentV),0.0);
 	output.worldPosition=float4(input.worldPosition,0.0);
     return output;
@@ -81,6 +83,7 @@ Texture2D worldPositionTexture : register(t0);
 Texture2D normalTexture : register(t1);
 Texture2D diffuseTexture  : register(t2);
 Texture2D specularTexture  : register(t3);
+Texture2D glowTexture  : register(t4);
 
 float4 DeferredLightingPixelShader(LightingPixelInputType input) : SV_TARGET
 {
@@ -93,6 +96,24 @@ float4 DeferredLightingPixelShader(LightingPixelInputType input) : SV_TARGET
 	float3 normal = normalTexture.Sample(pointSampler, input.texCoord).xyz;
 
 	float4 specularSample = specularTexture.Sample(pointSampler, input.texCoord);
+
+	float pixelWidth = 1.0/800.0;
+	float pixelHeight = 1.0/600.0;
+
+	float4 glowSample = glowTexture.Sample(pointSampler, input.texCoord);
+	glowSample *=4;
+	glowSample += glowTexture.Sample(pointSampler, input.texCoord+float2(pixelWidth,0));
+	glowSample += glowTexture.Sample(pointSampler, input.texCoord+float2(0,pixelHeight));
+	glowSample += glowTexture.Sample(pointSampler, input.texCoord+float2(-pixelWidth,0));
+	glowSample += glowTexture.Sample(pointSampler, input.texCoord+float2(0,-pixelHeight));
+	glowSample*=2;
+	glowSample += glowTexture.Sample(pointSampler, input.texCoord+float2(pixelWidth,pixelHeight));
+	glowSample += glowTexture.Sample(pointSampler, input.texCoord+float2(-pixelWidth,pixelHeight));
+	glowSample += glowTexture.Sample(pointSampler, input.texCoord+float2(-pixelWidth,pixelHeight));
+	glowSample += glowTexture.Sample(pointSampler, input.texCoord+float2(-pixelWidth,-pixelHeight));
+	glowSample /=16;
+
+//
 
 // calculate blinn-phong
 
@@ -110,9 +131,11 @@ float4 DeferredLightingPixelShader(LightingPixelInputType input) : SV_TARGET
 	}
 	specularIntensity/=sum;
 
+	float glowIntensity = pow(saturate( dot(normal,normalize(playerEyePosition.xyz-worldPosition))),5)*5.0;
+
 	float4 result =
 	//diffuseTexture.Sample(pointSampler, input.texCoord)*diffuseIntensity + 
-	float4(1.0,1.0,1.0,1.0) * specularIntensity * specularSample.y;
+	float4(1.0,1.0,1.0,1.0) * specularIntensity * specularSample.y + saturate(1.0-3.0*specularSample.y)*glowIntensity*glowSample;
 
     return result;
 }

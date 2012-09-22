@@ -39,6 +39,7 @@ struct PixelOutputType
     float4 normal : SV_TARGET1;
 	float4 diffuse : SV_TARGET2;
 	float4 specular : SV_TARGET3;
+	float4 glow : SV_TARGET4;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -50,6 +51,7 @@ Texture2D bumpTexture : register(t0);
 Texture2D normalTexture : register(t1);
 Texture2D diffuseTexture : register(t2);
 Texture2D specularTexture : register(t3);
+Texture2D glowTexture : register(t4);
 
 DeferredVertexInputType TerrainGenerateVertexShader(VertexInputType input)
 {
@@ -102,6 +104,8 @@ DeferredVertexInputType TerrainGenerateVertexShader(VertexInputType input)
 		disp += 400.0 * (1.0 / i2) * bumpTexture.SampleLevel(linearSampler,texCoords * i2,mipLevel).x;
 	}
 
+	disp -= 2.0 * length(glowTexture.SampleLevel(linearSampler,texCoords * 64,mipLevel).xyz);
+
 	output.position+= normal * disp;
 
     return output;
@@ -153,6 +157,10 @@ PixelOutputType TerrainPixelShader(PixelInputType input)
 	}
 
 	output.specular=float4(10.0+20.0*disp,specular,0.0,0.0);
+
+	float4 glow= glowTexture.Sample(linearSampler,input.texCoords * 64);
+
+	output.glow = glow;
 
     return output;
 }

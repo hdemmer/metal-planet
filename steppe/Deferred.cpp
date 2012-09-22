@@ -1,7 +1,7 @@
 
 #include "Globals.h"
 
-#define NUM_MRTS 4
+#define NUM_MRTS 5
 
 ID3D11Texture2D* renderTargetTexture[NUM_MRTS];
 ID3D11RenderTargetView* renderTargetView[NUM_MRTS];
@@ -342,16 +342,15 @@ void SetDeferredRenderer()
 
 void RenderDeferredLighting()
 {
-	ID3D11SamplerState * samplerStates[4] = {sampleStatePoint};
 
 	devcon->PSSetShader(deferredLightingPixelShader,NULL,0);
 	devcon->PSSetConstantBuffers(0, 1, &deferredConstantsBuffer);
 	devcon->PSSetShaderResources(0, NUM_MRTS, renderTargetResourceView);
 
-	devcon->PSSetSamplers(0, NUM_MRTS, samplerStates);
+	devcon->PSSetSamplers(0, 1, &sampleStatePoint);
 	RenderFullScreenQuad();
 
-	ID3D11ShaderResourceView * empty[] = {NULL,NULL,NULL,NULL};
+	ID3D11ShaderResourceView * empty[] = {NULL,NULL,NULL,NULL,NULL};
 
 	devcon->PSSetShaderResources(0, NUM_MRTS, empty);
 }
