@@ -246,9 +246,6 @@ void RenderFrame(void)
 
 	UpdateDeferred();	// TODO: call this in update not draw
 
-	//SetZPrePassRenderer();
-	//RenderTerrain();
-
 	SetDeferredRenderer();
 	RenderTerrain();
 	

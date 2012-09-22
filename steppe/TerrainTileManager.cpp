@@ -3,7 +3,7 @@
 #include "TerrainTileManager.h"
 
 #define MAX_TILES 1000
-#define MAX_TREE_DEPTH 8
+#define MAX_TREE_DEPTH 4
 
 struct QuadTreeNode
 {
@@ -140,7 +140,7 @@ void UpdateQuadTreeNode(QuadTreeNode * node)
 
 	if (!node->isLeaf)
 	{
-		if (factor >4)
+		if (factor >2)
 		{
 			CollapseQuadTreeNode(node);
 		} else {

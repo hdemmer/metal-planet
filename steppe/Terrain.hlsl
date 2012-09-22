@@ -125,8 +125,6 @@ PixelOutputType TerrainPixelShader(PixelInputType input)
 	output.diffuse=float4(0.1,0.1,0.1,0.0);
 
 	// normal mapping
-
-	float3 normal = cross(input.tangentV, input.tangentU);
 	
 	float4 normalSample;
 	float specular=1.0;
@@ -139,11 +137,12 @@ PixelOutputType TerrainPixelShader(PixelInputType input)
 		specular *= specularTexture.Sample(linearSampler,input.texCoords * i).x;
 	}
 	normalSample /= sum;
-	//specular /= sum;
 
 	float normalX = 2.0 * normalSample.x - 1.0;
 	float normalY = 2.0 * normalSample.y - 1.0;
 	float normalZ = 2.0 * normalSample.z - 1.0;
+
+	float3 normal = cross(input.tangentV, input.tangentU);
 	normal = normalize(normalZ * normal + normalX * input.tangentU + normalY * input.tangentV);
 
 	output.normal=float4(normal,0.0);

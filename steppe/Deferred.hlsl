@@ -88,9 +88,7 @@ Texture2D glowTexture  : register(t4);
 
 float4 DeferredLightingPixelShader(LightingPixelInputType input) : SV_TARGET
 {
-	float4 worldPositionSample = worldPositionTexture.Sample(pointSampler, input.texCoord);
-
-	float3 worldPosition=worldPositionSample.xyz;
+	float3 worldPosition=worldPositionTexture.Sample(pointSampler, input.texCoord).xyz;
 
 	float3 normal = normalTexture.Sample(pointSampler, input.texCoord).xyz;
 
@@ -111,43 +109,40 @@ float4 DeferredLightingPixelShader(LightingPixelInputType input) : SV_TARGET
 	glowSample += glowTexture.Sample(pointSampler, input.texCoord+float2(-pixelWidth,pixelHeight));
 	glowSample += glowTexture.Sample(pointSampler, input.texCoord+float2(-pixelWidth,-pixelHeight));
 	glowSample /=16;
-
 //
+
+	float specularExponent = specularSample.x;
+
 	float totalLightIntensity=0.0;
 
-	float j = 0;
-	for (float i = 0; j < 10; i++)
+	float3 worldToPlayer = playerEyePosition.xyz-worldPosition;
+	
+	for (float i = 0; i < 10; i++)
 	{
-	if (i >= 10.0)
+	for (float j = 0; j < 10; j++)
 	{
-		i=0;
-		j++;
-	}
+	
+	float3 lightPosition = float3(1000*i,1000,1000*j)-worldPosition;
 
-	float3 lightPosition = float3(1000*i,1000,1000*j);
-
-	float3 blinnHalf = normalize( normalize(playerEyePosition.xyz-worldPosition)+normalize(lightPosition-worldPosition ));
+	float3 blinnHalf = normalize( normalize(worldToPlayer)+normalize(lightPosition));
 	float specularBase =  saturate(dot(normal,blinnHalf));
 
-	float specularIntensity = 0.0;
-	float specularExponent = specularSample.x;
-	float sum=0.0;
-	for (float i = 1; i<17; i*=2)
-	{
-		sum+=1;
-		specularIntensity +=pow(specularBase, specularExponent*i);
-	}
-	specularIntensity/=sum;
-	float attenuation = saturate(1000.0/(length(playerEyePosition.xyz-worldPosition)+length(lightPosition-worldPosition )));
+	float specularIntensity = pow(specularBase,specularExponent);
+	specularIntensity +=pow(specularBase, specularExponent*4);
+	specularIntensity +=pow(specularBase, specularExponent*16);
+	specularIntensity +=pow(specularBase, specularExponent*32);
+	specularIntensity/=4;
+	
+	float attenuation = saturate(500.0/((length(worldToPlayer)+length(lightPosition))));
 
 	totalLightIntensity += attenuation * specularIntensity * specularSample.y;
-
+	}
 	}
 
 	float4 result = float4(float3(1.0,1.0,1.0)*totalLightIntensity,1.0);
 
 
-	float glowIntensity = pow(saturate( dot(normal,normalize(playerEyePosition.xyz-worldPosition))),5)*5.0;
+	float glowIntensity = pow(saturate( dot(normal,normalize(worldToPlayer))),5)*5.0;
 
 	result += saturate(1.0-3.0*specularSample.y)*glowIntensity*glowSample;
 
