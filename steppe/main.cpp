@@ -236,19 +236,22 @@ void InitD3D()
 
 extern ID3D11DepthStencilView * depthStencilView;
 
-DWORD lastUpdate = 0;
+LONGLONG lastUpdate = 0;
 
 // this is the function used to render a single frame
 void RenderFrame(void)
 {
 	// update
-	DWORD ticks = GetTickCount();
+	FILETIME ft_now;
+	LONGLONG ll_now;
+	GetSystemTimeAsFileTime(&ft_now);
+	ll_now = (LONGLONG)ft_now.dwLowDateTime + ((LONGLONG)(ft_now.dwHighDateTime) << 32LL);
 	if (lastUpdate)
 	{
-		gTimeSinceLastUpdate= (ticks-lastUpdate) /1000.0f;
+		gTimeSinceLastUpdate= (ll_now-lastUpdate) /10000000.0f;
 		gGameTime+=gTimeSinceLastUpdate;
 	}
-	lastUpdate = ticks;
+	lastUpdate = ll_now;
 
 	PlayerUpdate();
 

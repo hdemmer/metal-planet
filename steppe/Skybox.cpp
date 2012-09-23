@@ -3,11 +3,12 @@
 
 ID3D11PixelShader * skyboxPixelShader;
 
+ID3D11ShaderResourceView* galaxyTextureResourceView;
 ID3D11ShaderResourceView* skyboxTextureResourceView;
 
 XMMATRIX SkyboxGalaxyRotationMatrix()
 {
-	return XMMatrixRotationAxis(XMVectorSet(1,0,0,1),1+gGameTime*0.1);
+	return XMMatrixRotationAxis(XMVectorSet(0.7,0.0,0,1),gGameTime*0.5);
 }
 
 void SetupSkybox()
@@ -30,12 +31,15 @@ void SetupSkybox()
 
 	// render to texture
 
-	D3DX11CreateShaderResourceViewFromFile(dev, L"textures/skybox.png", NULL, NULL, &skyboxTextureResourceView, NULL);
+	D3DX11CreateShaderResourceViewFromFile(dev, L"textures/galaxy.png", NULL, NULL, &galaxyTextureResourceView, NULL);
+	D3DX11CreateShaderResourceViewFromFile(dev, L"textures/stars.png", NULL, NULL, &skyboxTextureResourceView, NULL);
 }
 
 void TearDownSkybox()
 {
 	skyboxPixelShader->Release();
+
+	galaxyTextureResourceView->Release();
 	skyboxTextureResourceView->Release();
 
 }
@@ -51,7 +55,8 @@ void RenderSkybox()
 
 	devcon->PSSetShader(skyboxPixelShader,NULL,0);
 	devcon->PSSetConstantBuffers(0, 1, &deferredConstantsBuffer);
-	devcon->PSSetShaderResources(0, 1, &skyboxTextureResourceView);
+	devcon->PSSetShaderResources(0, 1, &galaxyTextureResourceView);
+	devcon->PSSetShaderResources(1, 1, &skyboxTextureResourceView);
 
 	devcon->PSSetSamplers(0, 1, &sampleStatePoint);
 	RenderFullScreenQuad();

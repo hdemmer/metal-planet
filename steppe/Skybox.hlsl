@@ -16,7 +16,8 @@ struct PixelInputType
 };
 
 SamplerState pointSampler;
-Texture2D skyboxTexture : register(t0);
+Texture2D galaxyTexture : register(t0);
+Texture2D skyboxTexture : register(t1);
 
 float4 SkyboxPixelShader(PixelInputType input) : SV_TARGET
 {
@@ -42,17 +43,41 @@ float4 SkyboxPixelShader(PixelInputType input) : SV_TARGET
 	
 	float3 fragmentViewDir = normalize(viewDir+localX*x+up*y);
 
-	float u = saturate(atan2(fragmentViewDir.y,fragmentViewDir.z)*0.5-0.25);
+	float u,v;
+
+	// galaxy
+
 	u = saturate(0.5+0.5*fragmentViewDir.z/fragmentViewDir.y);
-	float v = saturate(0.5+0.5*fragmentViewDir.x/fragmentViewDir.y*(1+0.1*cos(atan2(fragmentViewDir.y,fragmentViewDir.z))));
+	v = saturate(0.5+0.5*fragmentViewDir.x/fragmentViewDir.y*(1+0.1*cos(atan2(fragmentViewDir.y,fragmentViewDir.z))));
 
 	float4 result;
-	float3 skyboxSample=skyboxTexture.Sample(pointSampler, float2(u,v)).xyz;
+	float3 galaxySample=galaxyTexture.Sample(pointSampler, float2(u,v)).xyz;
 
-	result = float4(skyboxSample,1);
+	if (fragmentViewDir.y <= 0.001)
+	{
+		// reject negative y or we would have two galaxies
+		// also remove div by zero artifacts
+		galaxySample = float3(0,0,0);
+	}
 
-	//result = float4(fragmentViewDir,1);
-	//result = float4(viewDir.xyz,1);
+	// stars
+	u = fragmentViewDir.x/fragmentViewDir.z;
+	v = fragmentViewDir.y/fragmentViewDir.z;
+	
+	if (abs(u) > 1 || abs(v)>1)
+	{
+		u = fragmentViewDir.x/fragmentViewDir.y;
+		v = fragmentViewDir.z/fragmentViewDir.y;
+	}
+	if (abs(u) > 1 || abs(v)>1)
+	{
+		u = fragmentViewDir.y/fragmentViewDir.x;
+		v = fragmentViewDir.z/fragmentViewDir.x;
+	}
+
+	float3 starsSample=skyboxTexture.Sample(pointSampler, float2(u,v)).xyz;
+
+	result = float4(galaxySample+0.4*starsSample,1);
     return result;
 }
 
