@@ -42,9 +42,9 @@ float4 SkyboxPixelShader(PixelInputType input) : SV_TARGET
 	
 	float3 fragmentViewDir = normalize(viewDir+localX*x+up*y);
 
-	float u = saturate(atan2(fragmentViewDir.y,fragmentViewDir.z)/3);
-	float v = saturate(acos(fragmentViewDir.x)/2-0.25);
-	v= saturate(0.5+0.3*fragmentViewDir.x/fragmentViewDir.y);
+	float u = saturate(atan2(fragmentViewDir.y,fragmentViewDir.z)*0.5-0.25);
+	u = saturate(0.5+0.5*fragmentViewDir.z/fragmentViewDir.y);
+	float v = saturate(0.5+0.5*fragmentViewDir.x/fragmentViewDir.y*(1+0.1*cos(atan2(fragmentViewDir.y,fragmentViewDir.z))));
 
 	float4 result;
 	float3 skyboxSample=skyboxTexture.Sample(pointSampler, float2(u,v)).xyz;

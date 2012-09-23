@@ -120,12 +120,12 @@ float4 DeferredLightingPixelShader(LightingPixelInputType input) : SV_TARGET
 
 	float3 worldToPlayer = playerEyePosition.xyz-worldPosition;
 	
-	for (float i = 0; i < 10; i++)
+	for (float i = -2; i < 3; i+=2)
 	{
-	for (float j = 0; j < 10; j++)
+	for (float j = -4; j < 5; j+=2)
 	{
 	
-	float3 lightPosition = float3(1000*i,1000,1000*j)-worldPosition;
+	float3 lightPosition = mul(float4(10*i,-1000,30*j*(3-abs(i)),1),galaxyRotation);
 
 	float3 blinnHalf = normalize( normalize(worldToPlayer)+normalize(lightPosition));
 	float specularBase =  saturate(dot(normal,blinnHalf));
@@ -136,9 +136,9 @@ float4 DeferredLightingPixelShader(LightingPixelInputType input) : SV_TARGET
 	specularIntensity +=pow(specularBase, specularExponent*32);
 	specularIntensity/=4;
 	
-	float attenuation = saturate(500.0/((length(worldToPlayer)+length(lightPosition))));
+	float lightIntensity = 0.1*(5-length(float2(i,j)))*saturate((lightPosition.y-10)*0.01);
 
-	totalLightIntensity += attenuation * specularIntensity * specularSample.y;
+	totalLightIntensity += specularIntensity * specularSample.y *lightIntensity;
 	}
 	}
 

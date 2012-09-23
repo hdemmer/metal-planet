@@ -155,7 +155,7 @@ PixelOutputType TerrainPixelShader(PixelInputType input)
 		disp += (1.0 / i2) * bumpTexture.Sample(linearSampler,input.texCoords * i2).x;
 	}
 
-	output.specular=float4(10.0+20.0*disp,specular,0.0,0.0);
+	output.specular=float4(20.0+20.0*disp,specular,0.0,0.0);
 
 	float4 glow= glowTexture.Sample(linearSampler,input.texCoords * 64);
 
