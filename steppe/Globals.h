@@ -19,6 +19,9 @@ extern void OutputShaderErrorMessage(ID3D10Blob* errorMessage);
 
 #define WORLD_SIZE 10000
 
+extern float gGameTime;
+extern float gTimeSinceLastUpdate;
+
 struct DeferredVertexType
 {
 	XMFLOAT3 position;

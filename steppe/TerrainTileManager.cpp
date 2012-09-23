@@ -3,7 +3,7 @@
 #include "TerrainTileManager.h"
 
 #define MAX_TILES 1000
-#define MAX_TREE_DEPTH 4
+#define MAX_TREE_DEPTH 6
 
 struct QuadTreeNode
 {

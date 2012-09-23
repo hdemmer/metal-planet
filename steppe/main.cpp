@@ -29,6 +29,8 @@ ID3D11Device *dev;                     // the pointer to our Direct3D device int
 ID3D11DeviceContext *devcon;           // the pointer to our Direct3D device context
 ID3D11RenderTargetView *backbuffer;    // the pointer to our back buffer
 
+float gGameTime;
+float gTimeSinceLastUpdate;
 
 // function prototypes
 void InitD3D();
@@ -219,6 +221,9 @@ void InitD3D()
 	dev->CreateRenderTargetView(pBackBuffer, NULL, &backbuffer);
 	pBackBuffer->Release();
 
+	gGameTime=0.0;
+	gTimeSinceLastUpdate=0.0;
+
 	SetupDeferred();
 	SetupRenderFullScreenQuad();
 	TerrainTileManagerSetup();
@@ -229,11 +234,32 @@ void InitD3D()
 	PlayerSetup();
 }
 
+extern ID3D11DepthStencilView * depthStencilView;
+
+DWORD lastUpdate = 0;
 
 // this is the function used to render a single frame
 void RenderFrame(void)
 {
-		D3D11_VIEWPORT viewport;
+	// update
+	DWORD ticks = GetTickCount();
+	if (lastUpdate)
+	{
+		gTimeSinceLastUpdate= (ticks-lastUpdate) /1000.0f;
+		gGameTime+=gTimeSinceLastUpdate;
+	}
+	lastUpdate = ticks;
+
+	PlayerUpdate();
+
+	UpdateTerrain();
+
+	UpdateDeferred();	// TODO: call this in update not draw
+
+
+	// render
+
+	D3D11_VIEWPORT viewport;
 	ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
 
 	viewport.TopLeftX = 0;
@@ -242,12 +268,6 @@ void RenderFrame(void)
 	viewport.Height = SCREEN_HEIGHT;
 	viewport.MinDepth=0.0f;
 	viewport.MaxDepth=1.0f;
-
-	PlayerUpdate();
-
-	UpdateTerrain();
-
-	UpdateDeferred();	// TODO: call this in update not draw
 
 	SetDeferredRenderer();
 	RenderTerrain();
@@ -260,7 +280,9 @@ void RenderFrame(void)
 	devcon->RSSetViewports(1, &viewport);
 	devcon->ClearRenderTargetView(backbuffer, D3DXCOLOR(0.0f, 0.2f, 0.4f, 1.0f));
 
-	//RenderDeferredLighting();
+	RenderDeferredLighting();
+
+	devcon->OMSetRenderTargets(1, &backbuffer, depthStencilView);
 
 	RenderSkybox();
 

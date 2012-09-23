@@ -27,11 +27,11 @@ ID3D11SamplerState* sampleStatePoint;
 struct MatrixBufferType
 {
 	XMMATRIX worldViewProjectionMatrix;
-//	XMMATRIX viewMatrix;
-//	XMMATRIX projectionMatrix;
+	XMMATRIX galaxyRotationMatrix;
 	XMFLOAT4 playerEyePosition;
 	XMFLOAT4 yawPitchFov;
 	XMFLOAT2 screenSize;
+	FLOAT gameTime;
 };
 
 
@@ -219,7 +219,7 @@ void SetupDeferred()
 	// Depth test parameters
 	dsDesc.DepthEnable = true;
 	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-	dsDesc.DepthFunc = D3D11_COMPARISON_LESS;
+	dsDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
 
 	// Stencil test parameters
 	dsDesc.StencilEnable = false;
@@ -277,6 +277,9 @@ void TearDownDeferred()
 
 #include "Player.h"
 
+// TODO: really, this should not be here, use separate constants buffer
+extern XMMATRIX SkyboxGalaxyRotationMatrix();
+
 void UpdateDeferred()
 {
 	// setup parameters
@@ -294,12 +297,14 @@ void UpdateDeferred()
 	//dataPtr->worldMatrix = XMMatrixTranspose(PlayerWorldMatrix());
 	//dataPtr->viewMatrix = XMMatrixTranspose(PlayerViewMatrix());
 	dataPtr->worldViewProjectionMatrix = XMMatrixTranspose(PlayerWorldMatrix()*PlayerViewMatrix()*PlayerProjectionMatrix());
+	dataPtr->galaxyRotationMatrix = XMMatrixTranspose(SkyboxGalaxyRotationMatrix());
 	XMFLOAT4 playerEyePosition;
 	XMStoreFloat4(&playerEyePosition,PlayerEyePosition());
 	playerEyePosition.w = 0.0;
 	dataPtr->playerEyePosition = playerEyePosition;
 	dataPtr->yawPitchFov = XMFLOAT4(gPlayerYaw,gPlayerPitch,gPlayerFov,0.0f);
 	dataPtr->screenSize = XMFLOAT2(SCREEN_WIDTH, SCREEN_HEIGHT);
+	dataPtr->gameTime=gGameTime;
 
 	// Unlock the constant buffer.
 	devcon->Unmap(deferredConstantsBuffer, 0);

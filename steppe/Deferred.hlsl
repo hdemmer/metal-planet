@@ -2,9 +2,11 @@
 cbuffer deferredConstantsBuffer
 {
 	matrix worldViewProjectionMatrix;
+	matrix galaxyRotation;
 	float4 playerEyePosition;
 	float4 yawPitchFOV;
 	float2 screenSize;
+	float gameTime;
 };
 
 //////////////

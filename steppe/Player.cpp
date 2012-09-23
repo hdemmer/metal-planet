@@ -55,7 +55,7 @@ void PlayerUpdate()
 
 	desiredDir = XMVector4Transform(desiredDir,RotateHoriz);
 
-	XMVECTOR candidateVec = XMLoadFloat3(&gPlayerPosition) + desiredDir*WORLD_SIZE*0.001f;//TODO: speed
+	XMVECTOR candidateVec = XMLoadFloat3(&gPlayerPosition) + desiredDir*100*gTimeSinceLastUpdate;
 	
 	XMStoreFloat3(&gPlayerPosition,candidateVec);
 
@@ -156,8 +156,8 @@ void PlayerSetup()
 
 
 	XMStoreFloat3(&gPlayerPosition,XMVectorSet(WORLD_SIZE/2,0,WORLD_SIZE/2,0));
-	gPlayerPitch = 0.0f;
-	gPlayerYaw = 0.0f;
+	gPlayerPitch = 0.1f;
+	gPlayerYaw = 3.6f;
 	gPlayerFov = XM_PIDIV4;
 }
 

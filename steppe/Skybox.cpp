@@ -5,6 +5,11 @@ ID3D11PixelShader * skyboxPixelShader;
 
 ID3D11ShaderResourceView* skyboxTextureResourceView;
 
+XMMATRIX SkyboxGalaxyRotationMatrix()
+{
+	return XMMatrixRotationAxis(XMVectorSet(1,0,0,1),1+gGameTime*0.1);
+}
+
 void SetupSkybox()
 {
 	ID3D10Blob* errorMessage = NULL;
