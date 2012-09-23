@@ -10,6 +10,7 @@
 XMFLOAT3 gPlayerPosition;
 float gPlayerYaw;
 float gPlayerPitch;
+float gPlayerFov;
 
 	// DirectInput variables
 	LPDIRECTINPUT8 din;    // the pointer to our DirectInput interface
@@ -123,7 +124,7 @@ XMMATRIX PlayerViewMatrix()
 XMMATRIX PlayerProjectionMatrix()
 {
     // Initialize the projection matrix
-    XMMATRIX Projection = XMMatrixPerspectiveFovLH( XM_PIDIV4, SCREEN_WIDTH / (FLOAT)SCREEN_HEIGHT, 10.0f, 2*WORLD_SIZE );
+    XMMATRIX Projection = XMMatrixPerspectiveFovLH( gPlayerFov, SCREEN_WIDTH / (FLOAT)SCREEN_HEIGHT, 10.0f, 2*WORLD_SIZE );
 
 	return Projection;
 }
@@ -157,6 +158,7 @@ void PlayerSetup()
 	XMStoreFloat3(&gPlayerPosition,XMVectorSet(WORLD_SIZE/2,0,WORLD_SIZE/2,0));
 	gPlayerPitch = 0.0f;
 	gPlayerYaw = 0.0f;
+	gPlayerFov = XM_PIDIV4;
 }
 
 void PlayerTearDown()

@@ -8,6 +8,7 @@
 #include "FullScreenQuad.h"
 #include "Terrain.h"
 #include "TerrainTileManager.h"
+#include "Skybox.h"
 #include "Player.h"
 
 // include the Direct3D Library file
@@ -223,6 +224,8 @@ void InitD3D()
 	TerrainTileManagerSetup();
 	SetupTerrain();
 
+	SetupSkybox();
+
 	PlayerSetup();
 }
 
@@ -257,7 +260,9 @@ void RenderFrame(void)
 	devcon->RSSetViewports(1, &viewport);
 	devcon->ClearRenderTargetView(backbuffer, D3DXCOLOR(0.0f, 0.2f, 0.4f, 1.0f));
 
-	RenderDeferredLighting();
+	//RenderDeferredLighting();
+
+	RenderSkybox();
 
 	// switch the back buffer and the front buffer
 	swapchain->Present(0, 0);
@@ -271,6 +276,8 @@ void CleanD3D(void)
 	TearDownDeferred();
 	TearDownRenderFullScreenQuad();
 	TearDownTerrain();
+	TearDownSkybox();
+
 	PlayerTearDown();
 
 	swapchain->SetFullscreenState(FALSE, NULL);    // switch to windowed mode

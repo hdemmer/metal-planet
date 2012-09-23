@@ -2,6 +2,9 @@
 #include "Globals.h"
 
 extern XMFLOAT3 gPlayerPosition;
+extern float gPlayerYaw;
+extern float gPlayerPitch;
+extern float gPlayerFov;
 
 void PlayerUpdate();
 

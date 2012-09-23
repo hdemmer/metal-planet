@@ -3,6 +3,7 @@ cbuffer deferredConstantsBuffer
 {
 	matrix worldViewProjectionMatrix;
 	float4 playerEyePosition;
+	float4 yawPitchFOV;
 	float2 screenSize;
 };
 

@@ -78,6 +78,7 @@
     <ClCompile Include="FullScreenQuad.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Player.cpp" />
+    <ClCompile Include="Skybox.cpp" />
     <ClCompile Include="Terrain.cpp" />
     <ClCompile Include="TerrainTileManager.cpp" />
   </ItemGroup>
@@ -86,12 +87,14 @@
     <ClInclude Include="FullScreenQuad.h" />
     <ClInclude Include="Globals.h" />
     <ClInclude Include="Player.h" />
+    <ClInclude Include="Skybox.h" />
     <ClInclude Include="Terrain.h" />
     <ClInclude Include="TerrainTileManager.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Deferred.hlsl" />
     <None Include="FullScreenQuad.hlsl" />
+    <None Include="Skybox.hlsl" />
     <None Include="Terrain.hlsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

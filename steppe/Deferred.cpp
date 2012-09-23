@@ -30,6 +30,7 @@ struct MatrixBufferType
 //	XMMATRIX viewMatrix;
 //	XMMATRIX projectionMatrix;
 	XMFLOAT4 playerEyePosition;
+	XMFLOAT4 yawPitchFov;
 	XMFLOAT2 screenSize;
 };
 
@@ -297,7 +298,7 @@ void UpdateDeferred()
 	XMStoreFloat4(&playerEyePosition,PlayerEyePosition());
 	playerEyePosition.w = 0.0;
 	dataPtr->playerEyePosition = playerEyePosition;
-
+	dataPtr->yawPitchFov = XMFLOAT4(gPlayerYaw,gPlayerPitch,gPlayerFov,0.0f);
 	dataPtr->screenSize = XMFLOAT2(SCREEN_WIDTH, SCREEN_HEIGHT);
 
 	// Unlock the constant buffer.
