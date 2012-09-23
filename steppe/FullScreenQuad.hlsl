@@ -4,13 +4,13 @@
 struct VertexInputType
 {
     float3 position : POSITION;
-    float2 texCoord : TEXCOORD;
+    float2 texCoord : TEXCOORD0;
 };
 
 struct PixelInputType
 {
     float4 position : SV_POSITION;
-    float2 texCoord : TEXCOORD;
+    float2 texCoord : TEXCOORD0;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

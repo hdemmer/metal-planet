@@ -33,8 +33,8 @@ float4 SkyboxPixelShader(PixelInputType input) : SV_TARGET
 	viewDir = mul(viewDir,galaxyRotation);
 	up=mul(up,galaxyRotation);
 
-	float3 localX = cross(up,viewDir);
-	up = cross(viewDir,localX);
+	float3 localX = normalize(cross(up,viewDir));
+	up = normalize(cross(viewDir,localX));
 
 	float fovPerPixel = tan(fov) / sqrt(dot(screenSize,screenSize));
 

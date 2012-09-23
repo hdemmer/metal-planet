@@ -55,7 +55,7 @@ void PlayerUpdate()
 
 	desiredDir = XMVector4Transform(desiredDir,RotateHoriz);
 
-	XMVECTOR candidateVec = XMLoadFloat3(&gPlayerPosition) + desiredDir*100*gTimeSinceLastUpdate;
+	XMVECTOR candidateVec = XMLoadFloat3(&gPlayerPosition) + desiredDir*500*gTimeSinceLastUpdate;
 	
 	XMStoreFloat3(&gPlayerPosition,candidateVec);
 
