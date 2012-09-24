@@ -124,24 +124,25 @@ PixelOutputType TerrainPixelShader(PixelInputType input)
 
 	// normal mapping
 	
-	float4 normalSample;
 	float specular=1.0;
-	float sum;
-	
+
+	float3 tangentU=input.tangentU;
+	float3 tangentV=input.tangentV;
+	float3 normal = cross(tangentV, tangentU);
+
 	for (float i=1;i<65;i*=4)
 	{
-		sum +=1;
-		normalSample += normalTexture.Sample(linearSampler,input.texCoords * i);
+		float4 normalSample = normalTexture.Sample(linearSampler,input.texCoords * i);
 		specular *= specularTexture.Sample(linearSampler,input.texCoords * i).x;
+
+		float normalX = 2.0 * normalSample.x - 1.0;
+		float normalY = 2.0 * normalSample.y - 1.0;
+		float normalZ = normalSample.z;
+
+		normal = normalize(normalZ * normal + normalX * input.tangentU + normalY * input.tangentV);
+		tangentV = cross(tangentU,normal);
+		tangentU = cross(normal,tangentV);
 	}
-	normalSample /= sum;
-
-	float normalX = 2.0 * normalSample.x - 1.0;
-	float normalY = 2.0 * normalSample.y - 1.0;
-	float normalZ = 2.0 * normalSample.z - 1.0;
-
-	float3 normal = cross(input.tangentV, input.tangentU);
-	normal = normalize(normalZ * normal + normalX * input.tangentU + normalY * input.tangentV);
 
 	output.normal=float4(normal,0.0);
 
@@ -153,7 +154,7 @@ PixelOutputType TerrainPixelShader(PixelInputType input)
 		disp += (1.0 / i2) * bumpTexture.Sample(linearSampler,input.texCoords * i2).x;
 	}
 
-	output.specular=float4(10.0+10.0*disp,specular,0.0,0.0);
+	output.specular=float4(5.0+5.0*disp,specular,0.0,0.0);
 
 	float4 glow= glowTexture.Sample(linearSampler,input.texCoords * 64);
 

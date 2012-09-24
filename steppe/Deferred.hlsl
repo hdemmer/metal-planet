@@ -134,9 +134,8 @@ float4 DeferredLightingPixelShader(LightingPixelInputType input) : SV_TARGET
 	specularBase *= pow(saturate(dot(lightDir,normal)),0.01);
 
 
-	float specularIntensity = 0.2*pow(specularBase,specularExponent);
-	//specularIntensity +=0.2*pow(specularBase, specularExponent*5);
-	specularIntensity +=5.0*pow(specularBase, specularExponent*20);
+	float specularIntensity = 0.5*pow(specularBase,specularExponent);
+	//specularIntensity +=5.0*pow(specularBase, specularExponent*20);
 
 	specularIntensity +=pow(specularBase,0.6)*0.01; // diffuse term
 

@@ -14,8 +14,8 @@ extern ID3D11Device *dev;
 extern void OutputShaderErrorMessage(ID3D10Blob* errorMessage);
 
 // define the screen resolution
-#define SCREEN_WIDTH  1600
-#define SCREEN_HEIGHT 900
+#define SCREEN_WIDTH  1280
+#define SCREEN_HEIGHT 720
 
 #define WORLD_SIZE 10000
 
