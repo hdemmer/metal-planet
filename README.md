@@ -9,9 +9,9 @@ Features
 --------
 
 - Dynamic tiling with tiles generated on GPU.
-- Sort-of deferred shading, but G-Buffer is way too fat. Also, forward-shading would have been much more appropriate for this.
+- Sort-of deferred shading, but G-Buffer is way too fat. Forward-shading would have been much more appropriate for this.
 
-![]https://github.com/hdemmer/metal-planet/raw/master/screenshots/tiling.JPG)
+![](https://github.com/hdemmer/metal-planet/raw/master/screenshots/tiling.JPG)
 
 Lessons learned
 ---------------
