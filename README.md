@@ -26,8 +26,10 @@ Lessons learned
  -------------
 
  - Cull off-screen tiles
+ - Group close tiles into single vertex buffer
+ - Larger world
  - Slim down G-Buffer, e.g. position from depth
  - Profile and slim down pixel shaders
-- Cleaner tear down
+ - Cleaner tear down
 
 
