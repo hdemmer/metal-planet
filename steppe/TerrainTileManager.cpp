@@ -209,8 +209,6 @@ void TerrainTileManagerUpdate()
 		gTerrainTileManager->rootNode = NewRootQuadTreeNode();
 
 	UpdateQuadTreeNode(gTerrainTileManager->rootNode);
-
-	printf("%d \n", gTerrainTileManager->idleTiles->size());
 }
 
 void TerrainTileManagerTearDown()

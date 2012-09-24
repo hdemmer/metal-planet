@@ -140,20 +140,13 @@ PixelOutputType TerrainPixelShader(PixelInputType input)
 
 	// normal mapping
 	
-	float specular=1.0;
-
 	float3 tangentU=input.tangentU;
 	float3 tangentV=input.tangentV;
 	float3 normal = cross(tangentV, tangentU);
 
-	for (float i3=16;i3<=32;i3*=4)
-	{
-		float fac = 0;
+	float fac = saturate(16*distance/400000);
 
-		fac = saturate(i3*distance/400000);
-
-		specular *= lerp(specularTexture.Sample(linearSampler,input.texCoords * i3).x,1,fac);
-	}
+	float specular = lerp(specularTexture.Sample(linearSampler,input.texCoords * 16).x,1,fac);
 	
 	for (float i=4;i<=64;i*=4)
 	{

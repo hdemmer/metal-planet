@@ -107,7 +107,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
 	wc.style = CS_HREDRAW | CS_VREDRAW;
 	wc.lpfnWndProc = WindowProc;
 	wc.hInstance = hInstance;
-	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+	wc.hCursor = NULL;
 	// wc.hbrBackground = (HBRUSH)COLOR_WINDOW;    // no longer needed
 	wc.lpszClassName = L"WindowClass";
 

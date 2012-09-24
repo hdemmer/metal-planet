@@ -133,19 +133,19 @@ float4 DeferredLightingPixelShader(LightingPixelInputType input) : SV_TARGET
 
 	float specularBase = saturate(dot(reflectedLightDir,playerDir));
 
-	float specularIntensity = 0.2*pow(specularBase,specularExponent);
-	specularIntensity +=0.1*saturate(dot(lightDir,normal))*pow(specularBase, 50)*saturate(1500/distance);	// reduce sharp highlights at distance
+	float specularIntensity = 0.15*pow(specularBase,specularExponent);
+	specularIntensity +=0.05*saturate(dot(lightDir,normal))*pow(specularBase, 50)*saturate(1500/distance);	// reduce sharp highlights at distance
 
 
 	float lightIntensity = 0.3*abs(5-abs(i));
 	lightIntensity = pow(lightIntensity,1.5);
 
 	lightIntensity *= saturate(dot(lightDir,float3(0,1,0))*30+5);	// dont use if below horizon
-	lightIntensity *= saturate(dot(lightDir,normal)*30+5);	// dont use if below normal
+	lightIntensity *= saturate(dot(lightDir,normal)*10+5);	// dont use if below normal
 
 	float3 lightColor = lerp(float3(0.72,0.6,0.75),float3(0.92,0.9,0.96),0.25*(4-abs(i)));
 
-	accumulatedLightColor += lightColor * (specularIntensity * specularSample.y + specularBase*0.03) *lightIntensity;
+	accumulatedLightColor += lightColor * (specularIntensity * specularSample.y + specularBase*0.02) *lightIntensity;
 	}
 
 	accumulatedLightColor *= saturate(1-distance/20000.0);
