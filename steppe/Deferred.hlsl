@@ -116,7 +116,7 @@ float4 DeferredLightingPixelShader(LightingPixelInputType input) : SV_TARGET
 
 	float specularExponent = specularSample.x;
 
-	float3 accumulatedLightColor=float3(0.05,0.05,0.05)*specularSample.y; // ambient term
+	float3 accumulatedLightColor=float3(0.02,0.02,0.025)*specularSample.y; // ambient term
 
 	float3 worldToPlayer = playerEyePosition.xyz-worldPosition;
 
@@ -126,15 +126,15 @@ float4 DeferredLightingPixelShader(LightingPixelInputType input) : SV_TARGET
 	{
 	
 	float3 lightPosition = mul(float4(70*i,-1000,40*i,1),galaxyRotation).xyz;
-
+		
 	float3 lightDir = normalize(lightPosition);
 	float3 playerDir = normalize(worldToPlayer);
 	float3 reflectedLightDir = 2*dot(lightDir,normal)*normal - lightDir;
 
 	float specularBase = saturate(dot(reflectedLightDir,playerDir));
 
-	float specularIntensity = 0.15*pow(specularBase,specularExponent);
-	specularIntensity +=0.2*saturate(dot(lightDir,normal))*pow(specularBase, 50)*saturate(1500/distance);	// reduce sharp highlights at distance
+	float specularIntensity = 0.2*pow(specularBase,specularExponent);
+	specularIntensity +=0.1*saturate(dot(lightDir,normal))*pow(specularBase, 50)*saturate(1500/distance);	// reduce sharp highlights at distance
 
 
 	float lightIntensity = 0.3*abs(5-abs(i));
@@ -145,8 +145,7 @@ float4 DeferredLightingPixelShader(LightingPixelInputType input) : SV_TARGET
 
 	float3 lightColor = lerp(float3(0.72,0.6,0.75),float3(0.92,0.9,0.96),0.25*(4-abs(i)));
 
-	accumulatedLightColor += lightColor * (specularIntensity * specularSample.y + specularBase*0.0003) *lightIntensity;
-
+	accumulatedLightColor += lightColor * (specularIntensity * specularSample.y + specularBase*0.03) *lightIntensity;
 	}
 
 	accumulatedLightColor *= saturate(1-distance/20000.0);
@@ -157,8 +156,6 @@ float4 DeferredLightingPixelShader(LightingPixelInputType input) : SV_TARGET
 	float glowIntensity = pow(saturate( dot(normal,normalize(worldToPlayer))),5)*5.0;
 
 	result += saturate(1.0-3.0*specularSample.y)*glowIntensity*glowSample;
-
-	//result=float4(normal.xxx,1.0);
 
     return result;
 }

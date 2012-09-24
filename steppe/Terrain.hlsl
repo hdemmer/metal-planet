@@ -53,6 +53,33 @@ Texture2D diffuseTexture : register(t2);
 Texture2D specularTexture : register(t3);
 Texture2D glowTexture : register(t4);
 
+float heightField(float2 position, float mipLevel)
+{
+	float h = 0.0;
+
+	for (float i=64;i<257;i*=1.8)
+	{
+		float u;
+		float v;
+		sincos(i,u,v);
+		h += 0.01*sqrt(i)*i*(sin((u*position.x + v*position.y)/i) + cos((v*position.x + u*position.y)/i));
+	}
+
+	// texcoords
+
+	float2 texCoords = position / 5000.0;
+
+	// texture based displace
+
+	float disp = 0.0;
+	for (float i2=1;i2<8;i2*=2)
+	{
+		disp += 100.0* bumpTexture.SampleLevel(linearSampler,texCoords * i2,mipLevel).x;
+	}
+
+	return h+disp;
+}
+
 DeferredVertexInputType TerrainGenerateVertexShader(VertexInputType input)
 {
     DeferredVertexInputType output;
@@ -61,26 +88,13 @@ DeferredVertexInputType TerrainGenerateVertexShader(VertexInputType input)
 	int mipLevel = 7-octave;
 
 	output.position.xzy = input.position*scale + float3(origin,0.0);
-	
-	// sinus waves
 
-	float h=0.0;
-	float dx=0.0;
-	float dz=0.0;
-	
-	for (float i=64;i<257;i*=1.8)
-	{
-		float u;
-		float v;
-		sincos(i,u,v);
-		h += 0.01*sqrt(i)*i*(sin((u*output.position.x + v*output.position.z)/i) + cos((v*output.position.x + u*output.position.z)/i));
-		output.position.y += h;
+	float h = heightField(output.position.xz, mipLevel);
 
-		dx +=0.01*sqrt(i)*(u*cos((v*output.position.z+u*output.position.x)/i)-v*sin((u*output.position.z+v*output.position.x)/i));
-		dz +=0.01*sqrt(i)*(v*cos((v*output.position.z+u*output.position.x)/i)-u*sin((u*output.position.z+v*output.position.x)/i));
-	}
-	
-	output.position.y += h;
+	output.position.y = h;
+
+	float dx = heightField(output.position.xz+float2(1,0), mipLevel)-h;
+	float dz = heightField(output.position.xz+float2(0,1), mipLevel)-h;
 
 	float3 tangentU = normalize(float3(1.0,dx,0.0));
 	float3 tangentV = normalize(float3(0.0,dz,1.0));
@@ -93,16 +107,6 @@ DeferredVertexInputType TerrainGenerateVertexShader(VertexInputType input)
 	float2 texCoords = output.position.xz / 5000.0;
 
 	output.texCoords = texCoords;
-
-	// texture based displace
-
-	float disp = 0.0;
-	for (float i2=1;i2<17;i2*=4)
-	{
-		disp += 10.0*(17-i2) * bumpTexture.SampleLevel(linearSampler,texCoords * i2,mipLevel).x;
-	}
-
-	//output.position+= normal * disp;
 
     return output;
 }
@@ -142,7 +146,7 @@ PixelOutputType TerrainPixelShader(PixelInputType input)
 	float3 tangentV=input.tangentV;
 	float3 normal = cross(tangentV, tangentU);
 
-	for (float i3=4;i3<=32;i3*=4)
+	for (float i3=16;i3<=32;i3*=4)
 	{
 		float fac = 0;
 
@@ -151,16 +155,15 @@ PixelOutputType TerrainPixelShader(PixelInputType input)
 		specular *= lerp(specularTexture.Sample(linearSampler,input.texCoords * i3).x,1,fac);
 	}
 	
-	for (float i=4;i<=4;i*=4)
+	for (float i=4;i<=64;i*=4)
 	{
 		float4 normalSample = normalTexture.Sample(linearSampler,input.texCoords * i);
 
-		float fac = i*distance/10000;
+		float fac = i*distance/2000;
 		if (fac<1)
 		{
 			fac = 1;
 		}
-		fac=1;
 
 		float normalX = 2.0 * normalSample.x - 1.0;
 		float normalY = 2.0 * normalSample.y - 1.0;
