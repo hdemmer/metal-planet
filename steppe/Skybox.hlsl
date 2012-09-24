@@ -30,8 +30,8 @@ float4 SkyboxPixelShader(PixelInputType input) : SV_TARGET
 	float3 viewDir = float3(cos(pitch)*sin(yaw),sin(pitch),cos(pitch)*cos(yaw));
 	float3 up = float3(cos(pitch+PI/2)*sin(yaw),sin(pitch+PI/2),cos(pitch+PI/2)*cos(yaw));
 
-	viewDir = mul(viewDir,galaxyRotation);
-	up=mul(up,galaxyRotation);
+	viewDir = mul(float4(viewDir,1),galaxyRotation).xyz;
+	up=mul(float4(up,1),galaxyRotation).xyz;
 
 	float3 localX = normalize(cross(up,viewDir));
 	up = normalize(cross(viewDir,localX));

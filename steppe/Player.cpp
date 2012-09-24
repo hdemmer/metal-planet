@@ -157,8 +157,8 @@ void PlayerSetup()
 
 	XMStoreFloat3(&gPlayerPosition,XMVectorSet(WORLD_SIZE/2,0,WORLD_SIZE/2,0));
 	gPlayerPitch = 0.1f;
-	gPlayerYaw = 3.6f;
-	gPlayerFov = XM_PIDIV4;
+	gPlayerYaw = 3.3f;
+	gPlayerFov = XM_PIDIV4*1.1;
 }
 
 void PlayerTearDown()

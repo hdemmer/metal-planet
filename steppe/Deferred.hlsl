@@ -116,26 +116,32 @@ float4 DeferredLightingPixelShader(LightingPixelInputType input) : SV_TARGET
 
 	float specularExponent = specularSample.x;
 
-	float3 accumulatedLightColor=float3(0,0,0);
+	float3 accumulatedLightColor=float3(0.05,0.05,0.05)*specularSample.y; // ambient term
 
 	float3 worldToPlayer = playerEyePosition.xyz-worldPosition;
 	
 	for (float i = -4; i < 5; i+=0.3)
 	{
 	
-	float3 lightPosition = mul(float4(100*i,-1000,40*i,1),galaxyRotation);
+	float3 lightPosition = mul(float4(100*i,-1000,40*i,1),galaxyRotation).xyz;
 
-	float3 blinnHalf = normalize( normalize(worldToPlayer)+normalize(lightPosition));
-	float specularBase =  saturate(dot(normal,blinnHalf));
+	float3 lightDir = normalize(lightPosition);
+	float3 playerDir = normalize(worldToPlayer);
+	float3 reflectedLightDir = 2*dot(lightDir,normal)*normal - lightDir;
 
-	float specularIntensity = pow(specularBase,specularExponent);
-	specularIntensity +=pow(specularBase, specularExponent*4);
-	specularIntensity +=pow(specularBase, specularExponent*16);
-	specularIntensity +=pow(specularBase, specularExponent*32);
-	specularIntensity/=4;
-	
-	float lightIntensity = 0.1*(5-abs(i))*saturate(lightPosition.y*0.5);
+	float specularBase = saturate(dot(reflectedLightDir,playerDir));
 
+	specularBase *= pow(saturate(dot(lightDir,normal)),0.01);
+
+
+	float specularIntensity = 0.2*pow(specularBase,specularExponent);
+	//specularIntensity +=0.2*pow(specularBase, specularExponent*5);
+	specularIntensity +=5.0*pow(specularBase, specularExponent*20);
+
+	specularIntensity +=pow(specularBase,0.6)*0.01; // diffuse term
+
+
+	float lightIntensity = 0.1*abs(5-abs(i));
 	lightIntensity = pow(lightIntensity,1.5);
 
 	float3 lightColor = lerp(float3(0.72,0.6,0.75),float3(0.92,0.9,0.96),0.25*(4-abs(i)));

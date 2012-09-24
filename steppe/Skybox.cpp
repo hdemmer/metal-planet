@@ -16,7 +16,6 @@ void SetupSkybox()
 	ID3D10Blob* errorMessage = NULL;
 	ID3D10Blob* pixelShaderBlob = NULL;
 
-
 	D3DX11CompileFromFile(L"Skybox.hlsl", NULL, NULL, "SkyboxPixelShader", "ps_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, NULL, 
 		&pixelShaderBlob, &errorMessage, NULL);
 

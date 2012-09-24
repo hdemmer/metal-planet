@@ -104,8 +104,6 @@ DeferredVertexInputType TerrainGenerateVertexShader(VertexInputType input)
 		disp += 400.0 * (1.0 / i2) * bumpTexture.SampleLevel(linearSampler,texCoords * i2,mipLevel).x;
 	}
 
-//	disp -= 2.0 * length(glowTexture.SampleLevel(linearSampler,texCoords * 64,mipLevel).xyz);
-
 	output.position+= normal * disp;
 
     return output;
@@ -155,7 +153,7 @@ PixelOutputType TerrainPixelShader(PixelInputType input)
 		disp += (1.0 / i2) * bumpTexture.Sample(linearSampler,input.texCoords * i2).x;
 	}
 
-	output.specular=float4(20.0+20.0*disp,specular,0.0,0.0);
+	output.specular=float4(10.0+10.0*disp,specular,0.0,0.0);
 
 	float4 glow= glowTexture.Sample(linearSampler,input.texCoords * 64);
 
