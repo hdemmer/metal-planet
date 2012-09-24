@@ -8,7 +8,7 @@ ID3D11ShaderResourceView* skyboxTextureResourceView;
 
 XMMATRIX SkyboxGalaxyRotationMatrix()
 {
-	return XMMatrixRotationAxis(XMVectorSet(1.0,0.0,0.0,1),1.1+gGameTime*0.03);
+	return XMMatrixRotationAxis(XMVectorSet(1.0,0.0,0.0,1),2.1);
 }
 
 void SetupSkybox()

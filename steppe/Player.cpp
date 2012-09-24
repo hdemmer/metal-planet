@@ -74,7 +74,7 @@ void PlayerUpdate()
 		h += 0.01f*sqrt(i)*i*(sin((u*gPlayerPosition.x + v*gPlayerPosition.z)/i) + cos((v*gPlayerPosition.x + u*gPlayerPosition.z)/i));
 	}
 
-	gPlayerPosition.y=h*1.5f+500.0f;
+	gPlayerPosition.y=h*1.5f+270.0f;
 
 	//////
 	

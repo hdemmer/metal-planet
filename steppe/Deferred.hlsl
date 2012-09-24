@@ -91,14 +91,14 @@ Texture2D glowTexture  : register(t4);
 
 float4 DeferredLightingPixelShader(LightingPixelInputType input) : SV_TARGET
 {
+	float pixelWidth = 1.0/screenSize.x;
+	float pixelHeight = 1.0/screenSize.y;
+
 	float3 worldPosition=worldPositionTexture.Sample(pointSampler, input.texCoord).xyz;
 
 	float3 normal = normalTexture.Sample(pointSampler, input.texCoord).xyz;
 
 	float4 specularSample = specularTexture.Sample(pointSampler, input.texCoord);
-
-	float pixelWidth = 1.0/800.0;
-	float pixelHeight = 1.0/600.0;
 
 	float4 glowSample = glowTexture.Sample(pointSampler, input.texCoord);
 	glowSample *=4;
@@ -125,7 +125,7 @@ float4 DeferredLightingPixelShader(LightingPixelInputType input) : SV_TARGET
 	for (float i = -4; i < 5; i+=1)
 	{
 	
-	float3 lightPosition = mul(float4(100*i,-1000,40*i,1),galaxyRotation).xyz;
+	float3 lightPosition = mul(float4(70*i,-1000,40*i,1),galaxyRotation).xyz;
 
 	float3 lightDir = normalize(lightPosition);
 	float3 playerDir = normalize(worldToPlayer);
@@ -133,8 +133,8 @@ float4 DeferredLightingPixelShader(LightingPixelInputType input) : SV_TARGET
 
 	float specularBase = saturate(dot(reflectedLightDir,playerDir));
 
-	float specularIntensity = 0.1*pow(specularBase,specularExponent);
-	specularIntensity +=0.2*pow(specularBase, 200)*saturate(5-distance/1000.0);	// reduce sharp highlights at distance
+	float specularIntensity = 0.15*pow(specularBase,specularExponent);
+	specularIntensity +=0.2*saturate(dot(lightDir,normal))*pow(specularBase, 50)*saturate(1500/distance);	// reduce sharp highlights at distance
 
 
 	float lightIntensity = 0.3*abs(5-abs(i));
@@ -145,7 +145,7 @@ float4 DeferredLightingPixelShader(LightingPixelInputType input) : SV_TARGET
 
 	float3 lightColor = lerp(float3(0.72,0.6,0.75),float3(0.92,0.9,0.96),0.25*(4-abs(i)));
 
-	accumulatedLightColor += lightColor * (specularIntensity * specularSample.y + specularBase*0.01) *lightIntensity;
+	accumulatedLightColor += lightColor * (specularIntensity * specularSample.y + specularBase*0.0003) *lightIntensity;
 
 	}
 
@@ -157,6 +157,8 @@ float4 DeferredLightingPixelShader(LightingPixelInputType input) : SV_TARGET
 	float glowIntensity = pow(saturate( dot(normal,normalize(worldToPlayer))),5)*5.0;
 
 	result += saturate(1.0-3.0*specularSample.y)*glowIntensity*glowSample;
+
+	//result=float4(normal.xxx,1.0);
 
     return result;
 }

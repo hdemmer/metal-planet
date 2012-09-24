@@ -1,6 +1,6 @@
 
 
-cbuffer terrainConstantsBuffer
+cbuffer terrainConstantsBuffer: register(c0)
 {
     float2 origin;
 	int octave;
@@ -88,8 +88,6 @@ DeferredVertexInputType TerrainGenerateVertexShader(VertexInputType input)
 	output.tangentU = tangentU;
 	output.tangentV = tangentV;
 
-	float3 normal = cross(tangentV,tangentU);
-
 	// texcoords
 
 	float2 texCoords = output.position.xz / 5000.0;
@@ -101,10 +99,10 @@ DeferredVertexInputType TerrainGenerateVertexShader(VertexInputType input)
 	float disp = 0.0;
 	for (float i2=1;i2<17;i2*=4)
 	{
-		disp += 400.0 * (1.0 / i2) * bumpTexture.SampleLevel(linearSampler,texCoords * i2,mipLevel).x;
+		disp += 10.0*(17-i2) * bumpTexture.SampleLevel(linearSampler,texCoords * i2,mipLevel).x;
 	}
 
-	output.position+= normal * disp;
+	//output.position+= normal * disp;
 
     return output;
 }
@@ -116,11 +114,25 @@ DeferredVertexInputType TerrainGenerateVertexShader(VertexInputType input)
 ////////////////////////////////////////////////////////////////////////////////
 
 
+cbuffer deferredConstantsBuffer : register(c0)
+{
+	matrix worldViewProjectionMatrix;
+	matrix galaxyRotation;
+	float4 playerEyePosition;
+	float4 yawPitchFOV;
+	float2 screenSize;
+	float gameTime;
+};
+
 PixelOutputType TerrainPixelShader(PixelInputType input)
 {
 	PixelOutputType output;
 	output.worldPosition=float4(input.worldPosition,0.0);
 	output.diffuse=float4(0.1,0.1,0.1,0.0);
+
+	float3 worldToPlayer = playerEyePosition.xyz-input.worldPosition;
+
+	float distance = length(worldToPlayer);
 
 	// normal mapping
 	
@@ -130,19 +142,35 @@ PixelOutputType TerrainPixelShader(PixelInputType input)
 	float3 tangentV=input.tangentV;
 	float3 normal = cross(tangentV, tangentU);
 
-	for (float i=1;i<65;i*=4)
+	for (float i3=4;i3<=32;i3*=4)
+	{
+		float fac = 0;
+
+		fac = saturate(i3*distance/400000);
+
+		specular *= lerp(specularTexture.Sample(linearSampler,input.texCoords * i3).x,1,fac);
+	}
+	
+	for (float i=4;i<=4;i*=4)
 	{
 		float4 normalSample = normalTexture.Sample(linearSampler,input.texCoords * i);
-		specular *= specularTexture.Sample(linearSampler,input.texCoords * i).x;
+
+		float fac = i*distance/10000;
+		if (fac<1)
+		{
+			fac = 1;
+		}
+		fac=1;
 
 		float normalX = 2.0 * normalSample.x - 1.0;
 		float normalY = 2.0 * normalSample.y - 1.0;
-		float normalZ = normalSample.z*(1+saturate(i/10-2));
+		float normalZ = 0.5*normalSample.z*fac;
 
 		normal = normalize(normalZ * normal + normalX * input.tangentU + normalY * input.tangentV);
 		tangentV = cross(tangentU,normal);
 		tangentU = cross(normal,tangentV);
 	}
+	
 
 	output.normal=float4(normal,0.0);
 
@@ -154,9 +182,9 @@ PixelOutputType TerrainPixelShader(PixelInputType input)
 		disp += (1.0 / i2) * bumpTexture.Sample(linearSampler,input.texCoords * i2).x;
 	}
 
-	output.specular=float4(5.0+5.0*disp,specular,0.0,0.0);
+	output.specular=float4(8.0+3.0*disp,specular,0.0,0.0);
 
-	float4 glow= glowTexture.Sample(linearSampler,input.texCoords * 64);
+	float4 glow= glowTexture.Sample(linearSampler,input.texCoords * 32);
 
 	output.glow = glow;
 
