@@ -51,7 +51,7 @@ float4 SkyboxPixelShader(PixelInputType input) : SV_TARGET
 	v = saturate(0.5+0.5*fragmentViewDir.x/fragmentViewDir.y*(1+0.1*cos(atan2(fragmentViewDir.y,fragmentViewDir.z))));
 
 	float4 result;
-	float3 galaxySample=galaxyTexture.Sample(pointSampler, float2(u,v)).xyz;
+	float3 galaxySample=galaxyTexture.Sample(pointSampler, float2(v,u)).xyz;
 
 	if (fragmentViewDir.y <= 0.001)
 	{
@@ -77,7 +77,7 @@ float4 SkyboxPixelShader(PixelInputType input) : SV_TARGET
 
 	float3 starsSample=skyboxTexture.Sample(pointSampler, float2(u,v)).xyz;
 
-	result = float4(galaxySample+0.4*starsSample,1);
+	result = float4(galaxySample+0.6*starsSample,1);
     return result;
 }
 
