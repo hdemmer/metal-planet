@@ -137,7 +137,7 @@ PixelOutputType TerrainPixelShader(PixelInputType input)
 
 		float normalX = 2.0 * normalSample.x - 1.0;
 		float normalY = 2.0 * normalSample.y - 1.0;
-		float normalZ = normalSample.z;
+		float normalZ = normalSample.z*(1+saturate(i/10-2));
 
 		normal = normalize(normalZ * normal + normalX * input.tangentU + normalY * input.tangentV);
 		tangentV = cross(tangentU,normal);

@@ -119,8 +119,10 @@ float4 DeferredLightingPixelShader(LightingPixelInputType input) : SV_TARGET
 	float3 accumulatedLightColor=float3(0.05,0.05,0.05)*specularSample.y; // ambient term
 
 	float3 worldToPlayer = playerEyePosition.xyz-worldPosition;
+
+	float distance = length(worldToPlayer);
 	
-	for (float i = -4; i < 5; i+=0.3)
+	for (float i = -4; i < 5; i+=1)
 	{
 	
 	float3 lightPosition = mul(float4(100*i,-1000,40*i,1),galaxyRotation).xyz;
@@ -131,23 +133,23 @@ float4 DeferredLightingPixelShader(LightingPixelInputType input) : SV_TARGET
 
 	float specularBase = saturate(dot(reflectedLightDir,playerDir));
 
-	specularBase *= pow(saturate(dot(lightDir,normal)),0.01);
+	float specularIntensity = 0.1*pow(specularBase,specularExponent);
+	specularIntensity +=0.2*pow(specularBase, 200)*saturate(5-distance/1000.0);	// reduce sharp highlights at distance
 
 
-	float specularIntensity = 0.5*pow(specularBase,specularExponent);
-	//specularIntensity +=5.0*pow(specularBase, specularExponent*20);
-
-	specularIntensity +=pow(specularBase,0.6)*0.01; // diffuse term
-
-
-	float lightIntensity = 0.1*abs(5-abs(i));
+	float lightIntensity = 0.3*abs(5-abs(i));
 	lightIntensity = pow(lightIntensity,1.5);
+
+	lightIntensity *= saturate(dot(lightDir,float3(0,1,0))*30+5);	// dont use if below horizon
+	lightIntensity *= saturate(dot(lightDir,normal)*30+5);	// dont use if below normal
 
 	float3 lightColor = lerp(float3(0.72,0.6,0.75),float3(0.92,0.9,0.96),0.25*(4-abs(i)));
 
-	accumulatedLightColor += lightColor * specularIntensity * specularSample.y *lightIntensity;
+	accumulatedLightColor += lightColor * (specularIntensity * specularSample.y + specularBase*0.01) *lightIntensity;
 
 	}
+
+	accumulatedLightColor *= saturate(1-distance/20000.0);
 
 	float4 result = float4(accumulatedLightColor,1.0);
 
