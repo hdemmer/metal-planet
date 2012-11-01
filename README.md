@@ -22,8 +22,8 @@ Lessons learned
  - Wasted a lot of time tweaking and fiddling with the lighting values.
  - Good assets are everything.
 
- Nice to haves
- -------------
+Nice to haves
+-------------
 
  - Cull off-screen tiles
  - Group close tiles into single vertex buffer
